@@ -1,0 +1,28 @@
+\documentclass[border=15pt, multi, tikz]{standalone}
+\usepackage{import}
+\usepackage{ctex}% 中文支持
+\usepackage{tikz}
+
+% 改变行距
+\renewcommand{\baselinestretch}{0.2}
+\linespread{0.2}
+
+\begin{document}
+    \begin{tikzpicture}
+        % \draw[style=help lines,step=1cm] (-2.3,-2.3) grid (2.3,2.3);
+        \draw[->,very thick] (0, 0) -- (10, 0) node[right]{};
+        \draw[->,very thick] (0, 0) -- (0, 4) node[above]{};
+        \node[] at (10, 0.5) {与物体的距离};
+        \node[text width = 1em] at (-0.5, 3) {奖励函数};
+        \node[] at (0, -0.5) {远};
+        \node[] at (9.5, -0.5) {近};
+        \node[] at (6, -0.5) {手指闭合前};
+        \draw[->] (0.5, 0.5) .. controls (2, 1.5) and (3, 2.5) .. (6, 2.5);
+        \node[] at (3, 3) {机械臂越靠近物体，奖励越大};
+        \draw[->] (6, 3.5) -- (8, 3.5);
+        \node[text width = 6em] at (8, 2.5) {为鼓励抓取行为，抓取成功奖励跳变增大};
+
+        \draw[densely dashed] (6, 0) -- (6, 4) node[above]{};
+        
+    \end{tikzpicture}
+\end{document}

@@ -1,0 +1,367 @@
+\documentclass[border=15pt, multi, tikz]{standalone}
+\usepackage{import}
+\usepackage{ctex}% 中文支持
+\usepackage{tikz}
+
+\subimport{./}{init}
+\usetikzlibrary{positioning}
+\usetikzlibrary{3d} %for including external image
+\usetikzlibrary{quotes,angles}
+\usetikzlibrary{calc}
+\usetikzlibrary{decorations.pathreplacing}
+
+\def\DataColor{rgb:blue,5;white,5}
+\def\ConvColor{rgb:yellow,5;red,2.5;white,5}
+\def\ConvReluColor{rgb:yellow,5;red,5;white,5}
+\def\PoolColor{rgb:red,1;black,0.3}
+\def\PcColor{rgb:blue,5;red,2.5;white,5}
+\def\PcSquashColor{rgb:blue,5;red,5;white,4}
+\def\DcColor{rgb:blue,5;green,15}
+\def\SumColor{rgb:blue,5;green,15}
+% \def\SoftmaxColor{rgb:magenta,5;black,7}
+
+\begin{document}
+\begin{tikzpicture}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 图像大小
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 图像经过卷积层1后的图像形状为:  torch.Size([16, 128, 254, 254])
+% 经过卷积层2后的图像形状为:  torch.Size([16, 64, 125, 125])
+% 经过池化层1后的图像形状为:  torch.Size([16, 64, 123, 123])
+% 经过卷积层3后的图像形状为:  torch.Size([16, 64, 121, 121])
+% 经过卷积层4后的图像形状为:  torch.Size([16, 32, 59, 59])
+% 经过池化层2后的图像形状为:  torch.Size([16, 32, 57, 57])
+% 经过卷积层5后的图像形状为:  torch.Size([16, 16, 55, 55])
+% 经过卷积层6后的图像形状为:  torch.Size([16, 16, 26, 26])
+% 经过池化层3后的图像形状为:  torch.Size([16, 16, 24, 24])
+% 经过卷积层1后的图像形状为:  torch.Size([16, 16, 22, 22])
+% 经过卷积层2后的图像形状为:  torch.Size([16, 16, 9, 9])
+% 变换后形状为:  torch.Size([16, 1296])
+% 变换后形状为:  torch.Size([16, 128])
+% 变换后形状为:  torch.Size([16, 64])
+
+\tikzstyle{connection}=[ultra thick,every node/.style={sloped,allow upside down},draw=\edgecolor,opacity=0.7]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Data
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\node[shift={(-4.5, 0, 15)}, canvas is zy plane at x=0] (state) at (0, 0, 0) {\includegraphics[width=6cm,height=6cm]{observation.png}};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% action
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pic[shift={(-4.5, 0, -15)}] at (0, 0, 0) {Box={name=action-value,fill=\DcColor,%
+        height=3,width=3,depth=12}};
+% 文字
+\node[shift={(0, 1.5, 2)}, rotate=45] at (action-value-east) {机器人最佳执行动作};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Linear Layer1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pic[shift={(10,0,0)}] at (action-value-east) {RightBandedBox={name=sfc1-1,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+% 平移
+\pic[shift={(10,0,4)}] at (action-value-east) {RightBandedBox={name=sfc1-2,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(10,0,4+2)}] at (action-value-east) {RightBandedBox={name=sfc1-3,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+
+
+\pic[shift={(10,0,-4)}] at (action-value-east) {RightBandedBox={name=sfc1-4,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(10,0,-4-2)}] at (action-value-east) {RightBandedBox={name=sfc1-5,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+% 省略号
+\node[shift={(0, 0, 2.7)}, canvas is zy plane at x=0] (temp) at (sfc1-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+\node[shift={(0, 0, -1.2)}, canvas is zy plane at x=0] (temp) at (sfc1-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Action和Linear Layer1之间的连线
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 循环变量
+\foreach \from/\to in {action-value-east/sfc1-1-west, action-value-east/sfc1-2-west, action-value-east/sfc1-3-west, action-value-east/sfc1-4-west, action-value-east/sfc1-5-west}
+    \draw[->]  (\from) -- (\to);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Linear Layer2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pic[shift={(10,0,0)}] at (sfc1-1-east) {RightBandedBox={name=sfc2-1,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+% 平移
+\pic[shift={(10,0,4)}] at (sfc1-1-east) {RightBandedBox={name=sfc2-2,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(10,0,4+2)}] at (sfc1-1-east) {RightBandedBox={name=sfc2-3,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+
+\pic[shift={(10,0,-4)}] at (sfc1-1-east) {RightBandedBox={name=sfc2-4,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(10,0,-4-2)}] at (sfc1-1-east) {RightBandedBox={name=sfc2-5,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+% 省略号
+\node[shift={(0, 0, 2.7)}, canvas is zy plane at x=0] (temp) at (sfc2-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+\node[shift={(0, 0, -1.2)}, canvas is zy plane at x=0] (temp) at (sfc2-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Linear Layer1和Linear Layer2之间的连线
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 循环变量
+\foreach \from/\to in {sfc1-1-east/sfc2-1-west, sfc1-1-east/sfc2-2-west, sfc1-1-east/sfc2-3-west, sfc1-1-east/sfc2-4-west, sfc1-1-east/sfc2-5-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {sfc1-2-east/sfc2-1-west, sfc1-2-east/sfc2-2-west, sfc1-2-east/sfc2-3-west, sfc1-2-east/sfc2-4-west, sfc1-2-east/sfc2-5-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {sfc1-3-east/sfc2-1-west, sfc1-3-east/sfc2-2-west, sfc1-3-east/sfc2-3-west, sfc1-3-east/sfc2-4-west, sfc1-3-east/sfc2-5-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {sfc1-4-east/sfc2-1-west, sfc1-4-east/sfc2-2-west, sfc1-4-east/sfc2-3-west, sfc1-4-east/sfc2-4-west, sfc1-4-east/sfc2-5-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {sfc1-5-east/sfc2-1-west, sfc1-5-east/sfc2-2-west, sfc1-5-east/sfc2-3-west, sfc1-5-east/sfc2-4-west, sfc1-5-east/sfc2-5-west}
+    \draw[->]  (\from) -- (\to);
+
+% reshape
+\pic[shift={(12, 0, 0)}] at (sfc2-1-east) {Box={name=state-pic,fill=\PcSquashColor,opacity=0.5,height=24,width=2,depth=24}};
+% 循环变量
+\foreach \from/\to in {sfc2-1-east/state-pic-west, sfc2-2-east/state-pic-west, sfc2-3-east/state-pic-west, sfc2-4-east/state-pic-west, sfc2-5-east/state-pic-west}
+    \draw[->]  (\from) -- (\to);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 卷积单元
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Conv1
+\pic[shift={(4,0,0)}] at (state) {RightBandedBox={name=cr1,%
+        xlabel={{"128", "128"}},ylabel=126,zlabel=126,fill=\ConvColor,bandfill=\ConvReluColor,%
+        height=60,width=20,depth=60}};
+%% Conv2
+\pic[shift={(5,0,0)}] at (cr1-east) {RightBandedBox={name=cr2,%
+        xlabel={{"64", "64"}},ylabel=124,zlabel=124,fill=\ConvColor,bandfill=\ConvReluColor,%
+        height=50,width=12,depth=50}};
+%% Conv3
+\pic[shift={(4,0,0)}] at (cr2-east) {RightBandedBox={name=cr3,%
+        xlabel={{"64", "64"}},ylabel=122,zlabel=122,fill=\ConvColor,bandfill=\ConvReluColor,%
+        height=40,width=8,depth=40}};
+% maxpool
+\pic[shift={(3,0,0)}] at (cr3-east) {Box={name=p1,fill=\PoolColor,opacity=0.5,height=30,width=2,depth=30}};
+% 注释
+\node[shift={(-4.5, -9.5, 0)}] at (cr1-east) {卷积层1};
+\node[shift={(-2.5, -8, 0)}] at (cr2-east) {卷积层2};
+\node[shift={(-2.5, -7, 0)}] at (cr3-east) {卷积层3};
+\node[shift={(-1.5, -5, 0)}] at (p1-east) {池化层1};
+% 卷积单元之间的连接
+\draw [connection]  (state) -- node {\midarrow} (cr1-west);
+\draw [connection]  (cr1-east) -- node {\midarrow} (cr2-west);
+\draw [connection]  (cr2-east) -- node {\midarrow} (p1-west);
+% 卷积单元的注释
+\coordinate (point1) at ([shift={(0, -9, 0)}] p1-east);
+\coordinate (point2) at ([shift={(-2, -9, 0)}] cr1-west);
+\draw[decorate, decoration={brace, raise=15pt,amplitude=0.7cm}] (point1) -- (point2);
+\node[shift={(-2.3, -10.6, 0)}] at (cr2-east) {卷积单元};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 卷积单元需要乘以2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\node[shift={(4, 0, 0)}, canvas is xy plane at z=0] (ellipsis1) at (p1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+\node[shift={(2, 0, 0)}, canvas is xy plane at z=0] (temp) at (ellipsis1) {\includegraphics[width=2cm,height=2cm]{x2.png}};
+\node[shift={(2, 0, 0)}, canvas is xy plane at z=0] (ellipsis2) at (temp) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+\draw [connection]  (p1-east) -- node {\midarrow} (ellipsis1);
+% 卷积栈
+\coordinate (point3) at ([shift={(0, -10, 0)}] ellipsis2);
+\coordinate (point4) at ([shift={(-2, -10, 0)}] cr1-west);
+\draw[decorate, decoration={brace, raise=15pt,amplitude=0.7cm}] (point3) -- (point4);
+\node[shift={(1.7, -11.5, 0)}] at (cr2-east) {卷积栈};
+% result
+\pic[shift={(2,0,0)}] at (ellipsis2) {Box={name=result1,fill=\ConvColor,opacity=0.5,height=24,width=2,depth=24}};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Merge
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%相加符号
+\pic[shift={(0,0,-15)}] at (result1-east) {Ball={name=sum,%
+        fill=\SumColor,opacity=0.6,%
+        radius=2.5,logo=$+$}};
+% merge
+\draw [connection]  (result1-anchor) -- node {\midarrow} (sum-anchor);
+\draw [connection]  (state-pic-anchor) -- node {\midarrow} (sum-anchor);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 卷积单元
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Conv1
+\pic[shift={(3.5,0,0)}] at (sum-east) {RightBandedBox={name=cr3,%
+        xlabel={{"16", "16"}},ylabel=22,zlabel=22,fill=\ConvColor,bandfill=\ConvReluColor,%
+        height=18,width=5,depth=18}};
+%% Conv2
+\pic[shift={(2,0,0)}] at (cr3-east) {RightBandedBox={name=cr4,%
+        xlabel={{"16", "16"}},ylabel=9,zlabel=9,fill=\ConvColor,bandfill=\ConvReluColor,%
+        height=15,width=5,depth=15}};
+
+% 注释
+\node[shift={(-1, -3.5, 0)}] at (cr3-east) {卷积层7};
+\node[shift={(-1, -3, 0)}] at (cr4-east) {卷积层8};
+% 卷积单元之间的连接
+\draw [connection]  (sum-east)        -- node {\midarrow} (cr3-west);
+\draw [connection]  (cr3-east)        -- node {\midarrow} (cr4-west);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Linear Layer1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pic[shift={(6,0,0)}] at (cr4-east) {RightBandedBox={name=fc1-1,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+% 平移
+\pic[shift={(6,0,4)}] at (cr4-east) {RightBandedBox={name=fc1-2,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(6,0,4+2)}] at (cr4-east) {RightBandedBox={name=fc1-3,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(6,0,4+4)}] at (cr4-east) {RightBandedBox={name=fc1-4,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(6,0,4+6)}] at (cr4-east) {RightBandedBox={name=fc1-5,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+
+\pic[shift={(6,0,-4)}] at (cr4-east) {RightBandedBox={name=fc1-6,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(6,0,-4-2)}] at (cr4-east) {RightBandedBox={name=fc1-7,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(6,0,-4-4)}] at (cr4-east) {RightBandedBox={name=fc1-8,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(6,0,-4-6)}] at (cr4-east) {RightBandedBox={name=fc1-9,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+% 省略号
+\node[shift={(0, 0, 2.7)}, canvas is zy plane at x=0] (temp) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+\node[shift={(0, 0, -1.2)}, canvas is zy plane at x=0] (temp) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Draw Dotted Edges 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\draw[densely dashed]
+    (fc1-5-west)++(3, 3.7, 8) coordinate(a) -- (cr4-nearnortheast)
+    (fc1-5-west)++(2, 1.3, 5.5) coordinate(b) -- (cr4-nearsoutheast)
+    (fc1-9-west)++(-0.5, -1.9, -3) coordinate(c) -- (cr4-farsoutheast)
+    (fc1-9-west)++(0, 1, 0) coordinate(d) -- (cr4-farnortheast)
+    ;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Linear Layer2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 平移
+\pic[shift={(8,0,2)}] at (fc1-1-east) {RightBandedBox={name=fc2-1,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(8,0,2+2)}] at (fc1-1-east) {RightBandedBox={name=fc2-2,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(8,0,2+4)}] at (fc1-1-east) {RightBandedBox={name=fc2-3,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(8,0,2+6)}] at (fc1-1-east) {RightBandedBox={name=fc2-4,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+
+\pic[shift={(8,0,-2)}] at (fc1-1-east) {RightBandedBox={name=fc2-5,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(8,0,-2-2)}] at (fc1-1-east) {RightBandedBox={name=fc2-6,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(8,0,-2-4)}] at (fc1-1-east) {RightBandedBox={name=fc2-7,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(8,0,-2-6)}] at (fc1-1-east) {RightBandedBox={name=fc2-8,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+% 省略号
+\node[shift={(8.3, 0, 0)}, canvas is zy plane at x=0] (ellipsis3) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Linear Layer1和Linear Layer2之间的连线
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 循环变量
+\foreach \from/\to in {fc1-1-east/fc2-1-west, fc1-1-east/fc2-2-west, fc1-1-east/fc2-3-west, fc1-1-east/fc2-4-west, fc1-1-east/fc2-5-west, fc1-1-east/fc2-6-west, fc1-1-east/fc2-7-west, fc1-1-east/fc2-8-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc1-2-east/fc2-1-west, fc1-2-east/fc2-2-west, fc1-2-east/fc2-3-west, fc1-2-east/fc2-4-west, fc1-2-east/fc2-5-west, fc1-2-east/fc2-6-west, fc1-2-east/fc2-7-west, fc1-2-east/fc2-8-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc1-3-east/fc2-1-west, fc1-3-east/fc2-2-west, fc1-3-east/fc2-3-west, fc1-3-east/fc2-4-west, fc1-3-east/fc2-5-west, fc1-3-east/fc2-6-west, fc1-3-east/fc2-7-west, fc1-3-east/fc2-8-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc1-4-east/fc2-1-west, fc1-4-east/fc2-2-west, fc1-4-east/fc2-3-west, fc1-4-east/fc2-4-west, fc1-4-east/fc2-5-west, fc1-4-east/fc2-6-west, fc1-4-east/fc2-7-west, fc1-4-east/fc2-8-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc1-5-east/fc2-1-west, fc1-5-east/fc2-2-west, fc1-5-east/fc2-3-west, fc1-5-east/fc2-4-west, fc1-5-east/fc2-5-west, fc1-5-east/fc2-6-west, fc1-5-east/fc2-7-west, fc1-5-east/fc2-8-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc1-6-east/fc2-1-west, fc1-6-east/fc2-2-west, fc1-6-east/fc2-3-west, fc1-6-east/fc2-4-west, fc1-6-east/fc2-5-west, fc1-6-east/fc2-6-west, fc1-6-east/fc2-7-west, fc1-6-east/fc2-8-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc1-7-east/fc2-1-west, fc1-7-east/fc2-2-west, fc1-7-east/fc2-3-west, fc1-7-east/fc2-4-west, fc1-7-east/fc2-5-west, fc1-7-east/fc2-6-west, fc1-7-east/fc2-7-west, fc1-7-east/fc2-8-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc1-8-east/fc2-1-west, fc1-8-east/fc2-2-west, fc1-8-east/fc2-3-west, fc1-8-east/fc2-4-west, fc1-8-east/fc2-5-west, fc1-8-east/fc2-6-west, fc1-8-east/fc2-7-west, fc1-8-east/fc2-8-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc1-9-east/fc2-1-west, fc1-9-east/fc2-2-west, fc1-9-east/fc2-3-west, fc1-9-east/fc2-4-west, fc1-9-east/fc2-5-west, fc1-9-east/fc2-6-west, fc1-9-east/fc2-7-west, fc1-9-east/fc2-8-west}
+    \draw[->]  (\from) -- (\to);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Linear Layer3
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 平移
+\pic[shift={(8,0,2)}] at (ellipsis3) {RightBandedBox={name=fc3-1,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(8,0,2+2)}] at (ellipsis3) {RightBandedBox={name=fc3-2,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(8,0,2+4)}] at (ellipsis3) {RightBandedBox={name=fc3-3,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(8,0,-2)}] at (ellipsis3) {RightBandedBox={name=fc3-4,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(8,0,-2-2)}] at (ellipsis3) {RightBandedBox={name=fc3-5,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+\pic[shift={(8,0,-2-4)}] at (ellipsis3) {RightBandedBox={name=fc3-6,
+        fill=\PcColor,bandfill=\PcSquashColor,%
+        height=8,width=3,depth=3}};
+% 省略号
+\node[shift={(8.3, 0, 0)}, canvas is zy plane at x=0] (ellipsis4) at (ellipsis3) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Linear Layer2和Linear Layer3之间的连线
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 循环变量
+\foreach \from/\to in {fc2-1-east/fc3-1-west, fc2-1-east/fc3-2-west, fc2-1-east/fc3-3-west, fc2-1-east/fc3-4-west, fc2-1-east/fc3-5-west, fc2-1-east/fc3-6-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc2-2-east/fc3-1-west, fc2-2-east/fc3-2-west, fc2-2-east/fc3-3-west, fc2-2-east/fc3-4-west, fc2-2-east/fc3-5-west, fc2-2-east/fc3-6-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc2-3-east/fc3-1-west, fc2-3-east/fc3-2-west, fc2-3-east/fc3-3-west, fc2-3-east/fc3-4-west, fc2-3-east/fc3-5-west, fc2-3-east/fc3-6-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc2-4-east/fc3-1-west, fc2-4-east/fc3-2-west, fc2-4-east/fc3-3-west, fc2-4-east/fc3-4-west, fc2-4-east/fc3-5-west, fc2-4-east/fc3-6-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc2-5-east/fc3-1-west, fc2-5-east/fc3-2-west, fc2-5-east/fc3-3-west, fc2-5-east/fc3-4-west, fc2-5-east/fc3-5-west, fc2-5-east/fc3-6-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc2-6-east/fc3-1-west, fc2-6-east/fc3-2-west, fc2-6-east/fc3-3-west, fc2-6-east/fc3-4-west, fc2-6-east/fc3-5-west, fc2-6-east/fc3-6-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc2-7-east/fc3-1-west, fc2-7-east/fc3-2-west, fc2-7-east/fc3-3-west, fc2-7-east/fc3-4-west, fc2-7-east/fc3-5-west, fc2-7-east/fc3-6-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc2-8-east/fc3-1-west, fc2-8-east/fc3-2-west, fc2-8-east/fc3-3-west, fc2-8-east/fc3-4-west, fc2-8-east/fc3-5-west, fc2-8-east/fc3-6-west}
+    \draw[->]  (\from) -- (\to);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Q
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pic[shift={(5,0, 0)}] at (ellipsis4) {Box={name=q-value,fill=\DcColor,%
+        height=3,width=3,depth=3}};
+% 文字
+\node[shift={(0, -1, 0)}, rotate=45] at (q-value-east) {状态动作评估值};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 输出q
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 循环变量
+\foreach \from/\to in {fc3-1-east/q-value-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc3-2-east/q-value-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc3-3-east/q-value-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc3-4-east/q-value-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc3-5-east/q-value-west}
+    \draw[->]  (\from) -- (\to);
+\foreach \from/\to in {fc3-6-east/q-value-west}
+    \draw[->]  (\from) -- (\to);
+\end{tikzpicture}
+\end{document}
