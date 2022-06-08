@@ -171,6 +171,7 @@ class JacoVisionServoGraspEnv(gym.Env):
         )  # dx, dy, dz, d_anger, d_gripper
 
         # Choose the objects in the bin.
+        self._numObjects = np.random.randint(1, 6)
         urdfList = self.getRandomObjects(self._numObjects, self._isTest)
         self._objectUids = self.randomlyPlaceObjects(urdfList)
         self._observation = self.getObservation()

@@ -164,6 +164,7 @@ class KukaNonVisionServoGraspEnv(KukaGymEnv):
         p.stepSimulation()
 
         # Choose the objects in the bin.
+        self._numObjects = np.random.randint(1, 6)
         urdfList = self._get_random_object(self._numObjects, self._isTest)
         self._objectUids = self._randomly_place_objects(urdfList)
         self._observation = self._get_observation()
