@@ -27,7 +27,7 @@ I use the SAC(soft actor-critic) algorithm to train the model. Actually, because
 ### non-vision servo based grasping task
 
 After training for 300,000 steps, the model achieved a grasping rate of 64% on non-visual servo grasping tasks using the jaco robotic arm.The following is the change curve of its crawl rate.
-![jaco_non_vision_servo_grasping_rate](./docs/picturess/jaco_non_vision_servo_grasping_rate.png)
+![jaco_non_vision_servo_grasping_rate](./docs/pictures/jaco_non_vision_servo_grasping_rate.png)
 
 But the model achieved a grasping rate of 77% only after training for 160,000 steps if using the Kuka robotic arm. The following is the change curve of its crawl rate.
 ![kuka_non_vision_servo_grasping_rate](./docs/pictures/kuka_non_vision_servo_grasping_rate.png)
