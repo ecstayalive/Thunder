@@ -26,10 +26,10 @@ if __name__ == "__main__":
     jaco = "j2n6s200"
     env = JacoNonVisionServoGraspEnv(
         jaco_model=jaco,
-        render=True,
+        render=False,
         width=128,
         height=128,
-        show_image=False,
+        show_image=True,
     )
     obs = env.reset()
     model = GPModel(env=env, total_time_steps=5000000)

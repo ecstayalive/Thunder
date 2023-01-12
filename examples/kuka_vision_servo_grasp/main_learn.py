@@ -21,11 +21,10 @@ import traceback
 
 if __name__ == "__main__":
     env = KukaVisionServoGraspEnv(
-        render=True, width=128, height=128, show_image=False,
+        render=False, width=128, height=128, show_image=True,
     )
     obs = env.reset()
     model = GPModel(env=env, total_time_steps=5000000)
-    model.learn()
     try:
         model.learn()
     except BaseException as e:
