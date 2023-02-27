@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 class CEMOptimizer:
     """
-    @brief CEMOptimizer
+    CEMOptimizer
     """
     
     def __init__(self,):

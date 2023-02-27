@@ -19,7 +19,7 @@ class Buffer:
         width=128,
         height=128,
         action_dim=5,
-        file_path="Datasets/",
+        file_path="datasets/",
     ):
         self.capacity = capacity  # << 单个正激励储存池的容量
         self.batch_size = batch_size
@@ -83,10 +83,6 @@ class Buffer:
         buffer_ready, p_data = self.preProcessData(
             state, action, reward, next_states, done
         )
-        # 正激励数据储存
-        if buffer_ready:
-            if p_data:
-                self.store2PositivePool()
 
         buffer_size = len(self.buffer["r"])
         temp_buffer_size = len(self.temp_buffer["r"])
@@ -110,41 +106,6 @@ class Buffer:
                 self.temp_buffer[key].clear()
 
         return buffer_ready
-
-    def store2PositivePool(self):
-        """储存数据到正激励池"""
-        temp_buffer_size = len(self.buffer["r"])
-        p_size = len(self.p_buffer["r"])
-        if temp_buffer_size + p_size <= self.capacity:
-            for key in self.p_buffer:
-                self.p_buffer[key].extend(self.temp_buffer[key])
-        else:
-            # 先储存为文件
-            p_file = open(
-                self.file_path + "p_file/p_file" + str(self.p_file_id) + ".pkl", "wb"
-            )
-            pickle.dump(self.p_buffer, p_file)
-            p_file.close()
-            self.p_file_id += 1
-            # 在建立一个空的新文件
-            temp_p_buffer = {
-                "img": deque(maxlen=1000),
-                "a": deque(maxlen=1000),
-                "r": deque(maxlen=1000),
-                "img_": deque(maxlen=1000),
-                "d": deque(maxlen=1000),
-            }
-            new_file = open(
-                self.file_path + "p_file/p_file_" + str(self.p_file_id) + ".pkl", "wb"
-            )
-            pickle.dump(temp_p_buffer, new_file)
-            new_file.close()
-            # 再清空内存数据
-            for key in self.p_buffer:
-                self.p_buffer[key].clear()
-            # 储存数据
-            for key in self.p_buffer:
-                self.p_buffer[key].extend(self.temp_buffer[key])
 
     def preProcessData(self, obs, action, reward, next_obs, done):
         """对数据进行预处理，如果到最后一步没有抓取成功，则之前的所有动作的奖励都设为-0.01"""
@@ -176,17 +137,6 @@ class Buffer:
         return buffer_ready, p_data
 
     def save(self):
-        # 先保存珍贵的成功数据
-        p_file = open(
-            self.file_path + "p_file/p_file_" + str(self.p_file_id) + ".pkl", "wb"
-        )
-        pickle.dump(self.p_buffer, p_file)
-        p_file.close()
-        # 保存成功数据文件id信息
-        p_file_id = open(self.file_path + "p_file/info.pkl", "wb")
-        pickle.dump(self.p_file_id, p_file_id)
-        p_file_id.close()
-        # 保存经验池
         buffer_file = open(self.file_path + "buffer.pkl", "wb")
         pickle.dump(self.buffer, buffer_file)
         buffer_file.close()
