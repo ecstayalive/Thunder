@@ -49,7 +49,7 @@ For this small model, the complete vision servo grasp problem seems too hard and
 ![jaco_vision_servo_grasp](./docs/pictures/jaco_half_vision_servo_grasp.gif)
 
 
-## Reference
+## References
 ```
 @article{haarnoja2018soft,
   title={Soft actor-critic algorithms and applications},
