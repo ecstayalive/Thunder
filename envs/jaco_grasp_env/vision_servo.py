@@ -1,12 +1,13 @@
 """Grasp environment
-This would build a environment providing all needs to 
-train the robot grasping the unknown objects.It is a 
+This would build a environment providing all needs to
+train the robot grasping the unknown objects.It is a
 vision servo based grasp environment.
 
 """
 
 import pybullet as p
 from gym import spaces
+
 from .framework import JacoGraspEnvFramework
 
 
@@ -17,7 +18,6 @@ class JacoVisionServoGraspEnv(JacoGraspEnvFramework):
         render=True,
         is_test=False,
         block_random=0.1,
-        num_objects=5,
         dv=0.15,
         max_step=10,
         width=128,
@@ -30,7 +30,6 @@ class JacoVisionServoGraspEnv(JacoGraspEnvFramework):
             render,
             is_test,
             block_random,
-            num_objects,
             dv,
             max_step,
             width,
@@ -75,16 +74,16 @@ class JacoVisionServoGraspEnv(JacoGraspEnvFramework):
         # 在抓取成功后，确定是否需要进行下一轮的抓取，进行下一轮的抓取
         if reward == 1.0:
             done = True
-            self.successful_grasp_times += 1
+            self.successful_times += 1
 
-        info = {"grasp_success": self.successful_grasp_times}
+        info = {"successful_times": self.successful_times}
         if done:
             self.total_grasp_times += 1
             if self.total_grasp_times == 0:
                 print(f"\nreward:{reward}, done:{done}, info:{info}")
             else:
                 print(
-                    f"\nreward:{reward}, done:{done}, successful_grasp_times:{self.successful_grasp_times}, total grasp times:{self.total_grasp_times}"
+                    f"\nreward:{reward}, done:{done}, successful_grasp_times:{self.successful_times}, total grasp times:{self.total_grasp_times}"
                 )
 
         return observation, reward, done, info
@@ -97,14 +96,11 @@ class JacoVisionServoGraspEnv(JacoGraspEnvFramework):
             pos, _ = p.getBasePositionAndOrientation(uid)
             # If any block is above height, provide reward.
             if pos[2] > 0.2:
-                self.successful_grasp_times += 1
-                reward = 1
+                self.successful_times += 1
+                reward = 1.0
                 break
 
         return reward
 
     def terminate(self):
-        if self.env_step == self.max_step:
-            return True
-        else:
-            return False
+        return self.env_step == self.max_step

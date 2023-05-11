@@ -4,7 +4,7 @@ from .j2s7s200 import J2s7s200
 from .j2s7s300 import J2s7s300
 
 
-class Jaco2():
+class Jaco2:
     """Jaco2 robotic arm control system interface"""
 
     def __init__(
@@ -63,7 +63,7 @@ class Jaco2():
                 time_step,
             )
         else:
-            raise KeyError("There is no jaco's model named" + jaco_model)
+            raise KeyError(f"There is no jaco's model named{jaco_model}")
 
     def reset(self):
         self.robotic_arm.reset()

@@ -1,38 +1,40 @@
 """Main file
-This file is used to train a model for jaco's non-vision servo
+This file is used to train a model for jaco's vision servo
 grasp task.
 
 """
+
+import os
 
 ########################################################################
 # Get the package path
 ########################################################################
 import sys
-import os
 
 package_path = os.path.abspath(os.path.join(os.getcwd(), "../.."))
 sys.path.append(package_path)
 os.chdir(package_path)
+import traceback
+
+from core.algorithms import SAC
+
 ########################################################################
 # Train a model
 ########################################################################
 from envs import JacoVisionServoGraspEnv
-from core.model import GPModel
-import traceback
 
 if __name__ == "__main__":
     jaco = "j2n6s200"
     env = JacoVisionServoGraspEnv(
         jaco_model=jaco,
         render=False,
-        width=128,
-        height=128,
+        width=256,
+        height=256,
         show_image=True,
     )
-    obs = env.reset()
-    model = GPModel(env=env, total_time_steps=5000000)
+    model = SAC(env=env)
     try:
-        model.learn()
+        model.learn(500000)
     except BaseException as e:
-        model.save()
+        model.save_model()
         traceback.print_exc()

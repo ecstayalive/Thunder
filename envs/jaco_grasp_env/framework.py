@@ -1,14 +1,15 @@
-import gym
+import glob
 import os
-from gym import spaces
+import random
+from abc import ABC, abstractmethod
+
+import cv2
+import gym
 import numpy as np
 import pybullet as p
 import pybullet_data as pd
 from agent import Jaco2
-import glob
-import cv2
-import random
-from abc import ABC, abstractmethod
+from gym import spaces
 from gym.utils import seeding
 
 
@@ -24,11 +25,10 @@ class JacoGraspEnvFramework(
         render=True,
         is_test=False,
         block_random=0.2,
-        num_objects=5,
         dv=0.06,
         max_step=10,
-        width=128,
-        height=128,
+        width=256,
+        height=256,
         show_image=False,
         use_depth_image=False,
     ):
@@ -39,7 +39,6 @@ class JacoGraspEnvFramework(
             render:
             is_test:
             block_random:
-            num_objects:
             dv:
             max_step:
             width:
@@ -56,7 +55,6 @@ class JacoGraspEnvFramework(
         self.max_force = 500
         self.max_velocity = 0.25
         self.block_random = block_random
-        self.num_objects = num_objects
         self.dv = dv
         self.width = width
         self.height = height
@@ -66,7 +64,7 @@ class JacoGraspEnvFramework(
         self.show_image = show_image
         # several parameters
         self.action_apply_time = 500
-        self.successful_grasp_times = 0  # << 抓取成功次数
+        self.successful_times = 0  # << 抓取成功次数
         self.total_grasp_times = 0  # << 尝试抓取次数
 
         # connect the physics engine
@@ -220,16 +218,16 @@ class JacoGraspEnvFramework(
             renderer=p.ER_BULLET_HARDWARE_OPENGL,
         )
         self.rgb_image = np.array(px, dtype=np.uint8)[:, :, :3][:, :, ::-1]
-        self.rgb_image = cv2.cvtColor(self.rgb_image, cv2.COLOR_BGR2GRAY)
+        self.gray_image = cv2.cvtColor(self.rgb_image, cv2.COLOR_BGR2GRAY)
         if self.show_image:
             img = self.rgb_image.copy()
-            img = cv2.resize(img, (240, 240), cv2.INTER_AREA)
+            img = cv2.resize(img, (256, 256), cv2.INTER_AREA)
             cv2.imshow("observation", img)
             cv2.waitKey(1)
-        self.rbg_image = np.array(self.rgb_image, dtype=np.float32)
-        obs = np.array(np.expand_dims(self.rgb_image, axis=0) / 255.0, dtype=np.float32)
-
-        return obs
+        self.gray_image = np.array(self.gray_image, dtype=np.float32)
+        return np.array(
+            np.expand_dims(self.gray_image, axis=0) / 255.0, dtype=np.float32
+        )
 
     def get_random_objects(self, num_objects, test):
         """Randomly choose an object urdf from the random_urdfs directory."""
@@ -240,10 +238,9 @@ class JacoGraspEnvFramework(
         found_object_directories = glob.glob(urdf_pattern)
         total_num_objects = len(found_object_directories)
         selected_objects = np.random.choice(np.arange(total_num_objects), num_objects)
-        selected_objects_filenames = []
-        for object_index in selected_objects:
-            selected_objects_filenames += [found_object_directories[object_index]]
-        return selected_objects_filenames
+        return [
+            found_object_directories[object_index] for object_index in selected_objects
+        ]
 
     @abstractmethod
     def terminate(self):

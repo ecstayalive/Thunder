@@ -1,14 +1,15 @@
-import gym
+import glob
 import os
-from gym import spaces
+import random
+from abc import ABC, abstractmethod
+
+import cv2
+import gym
 import numpy as np
 import pybullet as p
 import pybullet_data as pd
 from agent import Kuka
-import glob
-import cv2
-import random
-from abc import ABC, abstractmethod
+from gym import spaces
 from gym.utils import seeding
 
 
@@ -23,7 +24,6 @@ class KukaGraspEnvFramework(
         render=True,
         is_test=False,
         block_random=0.2,
-        num_objects=5,
         dv=0.1,
         max_step=10,
         camera_random=0,
@@ -40,7 +40,6 @@ class KukaGraspEnvFramework(
                 set of objects.
             block_random: A float between 0 and 1 indicated block randomness. 0 is
                 deterministic.
-            num_objects: The number of objects in the bin.
             dv: The velocity along each dimension for each action.
             max_step: The maximum number of actions per episode.
             camera_random: A float between 0 and 1 indicating camera placement
@@ -60,7 +59,6 @@ class KukaGraspEnvFramework(
         self.max_force = 500
         self.max_velocity = 0.25
         self.block_random = block_random
-        self.num_objects = num_objects
         self.dv = dv
         self.camera_random = camera_random
         self.width = width
@@ -96,7 +94,7 @@ class KukaGraspEnvFramework(
             pass
         else:
             self.observation_space = spaces.Box(
-                low=0, high=255, shape=(1, self.height, self.width), dtype=np.float32
+                low=0, high=1, shape=(3, self.height, self.width), dtype=np.float32
             )
 
     @abstractmethod
@@ -143,7 +141,7 @@ class KukaGraspEnvFramework(
         ########################################################################
         # set camera
         ########################################################################
-        # TODO(ecstayalive@163.com): optimize the camera locate position 
+        # TODO(ecstayalive@163.com): optimize the camera locate position
         target_position = [0.23, 0.2, 0.54]
         distance = 0.5
         pitch = -56 + self.camera_random * np.random.uniform(-3, 3)
@@ -231,16 +229,13 @@ class KukaGraspEnvFramework(
             projectionMatrix=self.proj_mat,
         )
         self.rgb_image = np.array(px, dtype=np.uint8)[:, :, :3][:, :, ::-1]
-        self.rgb_image = cv2.cvtColor(self.rgb_image, cv2.COLOR_BGR2GRAY)
+        # self.rgb_image = cv2.cvtColor(self.rgb_image, cv2.COLOR_BGR2GRAY)
         if self.show_image:
             img = self.rgb_image.copy()
-            img = cv2.resize(img, (240, 240), cv2.INTER_AREA)
             cv2.imshow("observation", img)
             cv2.waitKey(1)
-        self.rbg_image = np.array(self.rgb_image, dtype=np.float32)
-        obs = np.array(np.expand_dims(self.rgb_image, axis=0) / 255.0, dtype=np.float32)
-
-        return obs
+        self.rbg_image = np.array(self.rgb_image / 255.0, dtype=np.float32)
+        return self.rbg_image.transpose(2, 0, 1)
 
     def get_random_objects(self, num_objects, test):
         """Randomly choose an object urdf from the random_urdfs directory."""
@@ -251,10 +246,9 @@ class KukaGraspEnvFramework(
         found_object_directories = glob.glob(urdf_pattern)
         total_num_objects = len(found_object_directories)
         selected_objects = np.random.choice(np.arange(total_num_objects), num_objects)
-        selected_objects_filenames = []
-        for object_index in selected_objects:
-            selected_objects_filenames += [found_object_directories[object_index]]
-        return selected_objects_filenames
+        return [
+            found_object_directories[object_index] for object_index in selected_objects
+        ]
 
     @abstractmethod
     def terminate(self):

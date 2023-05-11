@@ -1,6 +1,7 @@
-import pybullet as p
-import numpy as np
 import os
+
+import numpy as np
+import pybullet as p
 import pybullet_data as pd
 
 

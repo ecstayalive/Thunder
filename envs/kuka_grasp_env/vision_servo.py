@@ -1,6 +1,7 @@
-from .framework import KukaGraspEnvFramework
-from gym import spaces
 import pybullet as p
+from gym import spaces
+
+from .framework import KukaGraspEnvFramework
 
 
 class KukaVisionServoGraspEnv(KukaGraspEnvFramework):
@@ -14,7 +15,6 @@ class KukaVisionServoGraspEnv(KukaGraspEnvFramework):
         render=True,
         is_test=False,
         block_random=0.3,
-        num_objects=5,
         dv=0.06,
         max_step=10,
         camera_random=0,
@@ -23,12 +23,10 @@ class KukaVisionServoGraspEnv(KukaGraspEnvFramework):
         show_image=True,
         use_depth_image=False,
     ):
-
         super(KukaVisionServoGraspEnv, self).__init__(
             render,
             is_test,
             block_random,
-            num_objects,
             dv,
             max_step,
             camera_random,
@@ -103,7 +101,6 @@ class KukaVisionServoGraspEnv(KukaGraspEnvFramework):
             pos, _ = p.getBasePositionAndOrientation(uid)
             # If any block is above height, provide reward.
             if pos[2] > 0.15:
-                self.successful_grasp_times += 1
                 reward = 1
                 break
         return reward
@@ -112,7 +109,4 @@ class KukaVisionServoGraspEnv(KukaGraspEnvFramework):
         """
         Terminates the episode if we have tried to grasp or if we are above max steps.
         """
-        if self.env_step >= self.max_step:
-            return True
-        else:
-            return False
+        return self.env_step >= self.max_step

@@ -1,6 +1,7 @@
-from .framework import KukaGraspEnvFramework
-from gym import spaces
 import pybullet as p
+from gym import spaces
+
+from .framework import KukaGraspEnvFramework
 
 
 class KukaNonVisionServoGraspEnv(KukaGraspEnvFramework):
@@ -14,7 +15,6 @@ class KukaNonVisionServoGraspEnv(KukaGraspEnvFramework):
         render=True,
         is_test=False,
         block_random=0.3,
-        num_objects=5,
         dv=0.06,
         max_step=10,
         camera_random=0,
@@ -23,12 +23,10 @@ class KukaNonVisionServoGraspEnv(KukaGraspEnvFramework):
         show_image=True,
         use_depth_image=False,
     ):
-
         super(KukaNonVisionServoGraspEnv, self).__init__(
             render,
             is_test,
             block_random,
-            num_objects,
             dv,
             max_step,
             camera_random,
@@ -49,7 +47,7 @@ class KukaNonVisionServoGraspEnv(KukaGraspEnvFramework):
         ########################################################################
         # action spaces
         ########################################################################
-        self.action_space = spaces.Box(low=-10, high=10, shape=(3,))  # dx, dy, dangle
+        self.action_space = spaces.Box(low=-1, high=1, shape=(3,))  # dx, dy, dangle
         return self.env_reset()
 
     def step(self, action):
@@ -92,7 +90,10 @@ class KukaNonVisionServoGraspEnv(KukaGraspEnvFramework):
         if done:
             self.total_grasp_times += 1
             print(
-                f"done: {done}, reward: {reward}, successful_grasp_times: {self.successful_grasp_times}, total_grasp_times: {self.total_grasp_times}"
+                f"done: {done}, \
+                reward: {reward}, \
+                successful_grasp_times: {self.successful_grasp_times}, \
+                total_grasp_times: {self.total_grasp_times}"
             )
         return observation, reward, done, info
 
@@ -107,7 +108,6 @@ class KukaNonVisionServoGraspEnv(KukaGraspEnvFramework):
             pos, _ = p.getBasePositionAndOrientation(uid)
             # If any block is above height, provide reward.
             if pos[2] > 0.15:
-                self.successful_grasp_times += 1
                 reward = 1
                 break
         return reward
@@ -125,12 +125,10 @@ class KukaNonVisionServoGraspEnv(KukaGraspEnvFramework):
             self.kuka.apply_action(grasp_action)
             p.stepSimulation()
             finger_angle -= 1 / 100.0
-            if finger_angle < 0:
-                finger_angle = 0
+            finger_angle = max(finger_angle, 0)
         for _ in range(500):
             grasp_action = [0, 0, 0.001, 0, finger_angle]
             self.kuka.apply_action(grasp_action)
             p.stepSimulation()
             finger_angle -= 1 / 100.0
-            if finger_angle < 0:
-                finger_angle = 0
+            finger_angle = max(finger_angle, 0)

@@ -1,5 +1,5 @@
 """Main file
-This file is used to train a model for jaco's non-vision servo
+This file is used to train a model for kuka's vision servo
 grasp task.
 
 """
@@ -9,6 +9,7 @@ grasp task.
 ########################################################################
 import sys
 import os
+
 package_path = os.path.abspath(os.path.join(os.getcwd(), "../.."))
 sys.path.append(package_path)
 os.chdir(package_path)

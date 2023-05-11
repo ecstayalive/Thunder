@@ -1,13 +1,14 @@
 """Grasp environment
-This would build a environment providing all needs to 
-train the robot grasping the unkonwn objects. Through 
-it is a non-vision servo based environment, it still 
+This would build a environment providing all needs to
+train the robot grasping the unkonwn objects. Through
+it is a non-vision servo based environment, it still
 is based on vision.
 
 """
 
 import pybullet as p
 from gym import spaces
+
 from .framework import JacoGraspEnvFramework
 
 
@@ -18,11 +19,10 @@ class JacoNonVisionServoGraspEnv(JacoGraspEnvFramework):
         render=True,
         is_test=False,
         block_random=0.2,
-        num_objects=5,
         dv=0.06,
         max_step=10,
-        width=128,
-        height=128,
+        width=256,
+        height=256,
         show_image=False,
         use_depth_image=False,
     ):
@@ -31,7 +31,6 @@ class JacoNonVisionServoGraspEnv(JacoGraspEnvFramework):
             render,
             is_test,
             block_random,
-            num_objects,
             dv,
             max_step,
             width,
@@ -77,16 +76,14 @@ class JacoNonVisionServoGraspEnv(JacoGraspEnvFramework):
         reward = self.reward()
         # 判断是否终止程序
         done = self.terminate()
-        info = {"successful_grasp_times": self.successful_grasp_times}
+        info = {"successful_times": self.successful_times}
         if done:
             self.total_grasp_times += 1
             if self.total_grasp_times == 0:
-                print(
-                    f"\nreward:{reward}, done:{done}, info:{self.successful_grasp_times}"
-                )
+                print(f"\nreward:{reward}, done:{done}, info:{self.successful_times}")
             else:
                 print(
-                    f"\nreward:{reward}, done:{done}, successful_grasp_times:{self.successful_grasp_times}, total grasp times:{self.total_grasp_times}"
+                    f"\nreward:{reward}, done:{done}, successful_grasp_times:{self.successful_times}, total grasp times:{self.total_grasp_times}"
                 )
         return observation, reward, done, info
 
@@ -105,8 +102,8 @@ class JacoNonVisionServoGraspEnv(JacoGraspEnvFramework):
                 pos, _ = p.getBasePositionAndOrientation(uid)
                 # If any block is above height, provide reward.
                 if pos[2] > 0.2:
-                    self.successful_grasp_times += 1
-                    reward = 1
+                    self.successful_times += 1
+                    reward = 1.0
                     break
 
         return reward
@@ -116,10 +113,7 @@ class JacoNonVisionServoGraspEnv(JacoGraspEnvFramework):
         终止函数，用于终止程序
 
         """
-        if self.attempted_grasp or self.env_step == self.max_step:
-            return True
-        else:
-            return False
+        return bool(self.attempted_grasp or self.env_step == self.max_step)
 
     def apply_grasp_action(self):
         finger_angle = 1
@@ -128,12 +122,10 @@ class JacoNonVisionServoGraspEnv(JacoGraspEnvFramework):
             self.jaco2.apply_action(grasp_action)
             p.stepSimulation()
             finger_angle -= 1 / 100.0
-            if finger_angle < 0:
-                finger_angle = 0
+            finger_angle = max(finger_angle, 0)
         for _ in range(1000):
             grasp_action = [0, 0, 0.002, 0, finger_angle]
             self.jaco2.apply_action(grasp_action)
             p.stepSimulation()
             finger_angle -= 1 / 100.0
-            if finger_angle < 0:
-                finger_angle = 0
+            finger_angle = max(finger_angle, 0)

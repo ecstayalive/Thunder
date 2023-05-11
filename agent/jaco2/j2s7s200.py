@@ -2,8 +2,9 @@
 J2s7s200's basic control system
 
 """
-import pybullet as p
 import numpy as np
+import pybullet as p
+
 from .jaco2_agent import Jaco2Agent
 
 
@@ -62,16 +63,16 @@ class J2s7s200(Jaco2Agent):
                 self.motor_indices.append(i)
                 self.motor_names.append(str(joint_info[1]))
         # set the robotic arm's load position
-        self.gripper_angle= self.gripper_original_angle  # << jaco机械臂夹爪角度初始值
+        self.gripper_angle = self.gripper_original_angle  # << jaco机械臂夹爪角度初始值
         self.set_original_position()
         for _ in range(int(self.action_apply_time / 4)):
             p.stepSimulation()
 
     def get_end_effector_state(self):
         """Get end effector height
-        
+
         Returns: [pos, euler_angle]
-            
+
         """
         state = p.getLinkState(self.jaco_uid, self.jaco_end_effector_index)
         # 三维坐标
@@ -84,17 +85,17 @@ class J2s7s200(Jaco2Agent):
 
     def apply_action(self, action):
         """The robotic arm performs action
-        
+
         Args:
             action: [dx, dy, dz, da, finger_angle], finger_angle: close(0) -> open(1)
 
         """
         # Restrict the pose of the gripper
-        self.gripper_angle= self.gripper_angle+ action[3]
-        if self.gripper_angle>= np.pi:
-            self.gripper_angle= np.pi
-        if self.gripper_angle<= -np.pi:
-            self.gripper_angle= -np.pi
+        self.gripper_angle = self.gripper_angle + action[3]
+        if self.gripper_angle >= np.pi:
+            self.gripper_angle = np.pi
+        if self.gripper_angle <= -np.pi:
+            self.gripper_angle = -np.pi
 
         # Jaco's Movement is a process
         dxyz = np.array(action[:3])
@@ -104,19 +105,23 @@ class J2s7s200(Jaco2Agent):
                 self.jaco_end_effector_position[i] + dxyz[i]
             )
         # Restrict x axis
-        if self.jaco_end_effector_position[0] > 0.1:
-            self.jaco_end_effector_position[0] = 0.1
-        if self.jaco_end_effector_position[0] < -0.1:
-            self.jaco_end_effector_position[0] = -0.1
+        self.jaco_end_effector_position[0] = min(
+            self.jaco_end_effector_position[0], 0.1
+        )
+        self.jaco_end_effector_position[0] = max(
+            self.jaco_end_effector_position[0], -0.1
+        )
         # Restrict y axis
-        if self.jaco_end_effector_position[1] > 0.2:
-            self.jaco_end_effector_position[1] = 0.2
-        if self.jaco_end_effector_position[1] < -0.2:
-            self.jaco_end_effector_position[1] = -0.2
+        self.jaco_end_effector_position[1] = min(
+            self.jaco_end_effector_position[1], 0.2
+        )
+        self.jaco_end_effector_position[1] = max(
+            self.jaco_end_effector_position[1], -0.2
+        )
         # Restrict z axis
-        if self.jaco_end_effector_position[2] < 0.0:
-            self.jaco_end_effector_position[2] = 0.0
-
+        self.jaco_end_effector_position[2] = max(
+            self.jaco_end_effector_position[2], 0.0
+        )
         # Inverse Kinematics
         if self.use_quaternion:
             # 使用确定位姿计算关节角度，但是只能保证夹爪竖直向下
@@ -188,7 +193,9 @@ class J2s7s200(Jaco2Agent):
         else:
             # 当不使用确定位姿时，就直接进行逆运动学解算
             jaco_original_position = self.accurateCalculateInverseKinematics(
-                self.jaco_uid, self.jaco_end_effector_index, self.jaco_end_effector_position
+                self.jaco_uid,
+                self.jaco_end_effector_index,
+                self.jaco_end_effector_position,
             )
         # the pose of the end effector, which decide the gripper's angle
         jaco_original_position[5] = self.gripper_angle
@@ -217,50 +224,3 @@ class J2s7s200(Jaco2Agent):
                 targetPosition=0.4,
                 force=self.finger_tip_force,
             )
-
-    def accurateCalculateInverseKinematics(
-        self,
-        jaco_uid,
-        end_effector_index,
-        target_pos,
-        quaternion=None,
-        threshold=0.0005,
-        max_iter=50,
-    ):
-        """A more accurate inverse kinematics method
-
-        Args:
-            jaco_uid: jaco机械臂id
-            end_effector_index: 末端关节id
-            target_pos: 目标位置
-            quaternion: 目标姿态
-            threshold: 定位精度，一般机器人的位置精度在1mm到5mm之间
-            max_iter: 最大迭代次数，为减少程序运行的时间，默认为50
-
-        """
-        close_enough = False
-        iter = 0
-        dist2 = 1e8
-        while not close_enough and iter < max_iter:
-            if quaternion is not None:
-                joint_poses = p.calculateInverseKinematics(
-                    jaco_uid, end_effector_index, target_pos, quaternion
-                )[:6]
-            else:
-                joint_poses = p.calculateInverseKinematics(
-                    jaco_uid, end_effector_index, target_pos
-                )[:6]
-            for item in enumerate(self.motor_indices[:6]):
-                p.resetJointState(jaco_uid, item[1], joint_poses[item[0]])
-            ls = p.getLinkState(jaco_uid, end_effector_index)
-            new_pos = ls[4]
-            diff = [
-                target_pos[0] - new_pos[0],
-                target_pos[1] - new_pos[1],
-                target_pos[2] - new_pos[2],
-            ]
-            dist2 = np.sqrt(diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2])
-            close_enough = dist2 < threshold
-            iter = iter + 1
-        # print("Num iter: " + str(iter) + "  threshold: " + str(dist2))
-        return joint_poses
