@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+title: GP
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Dianyong
+    family-names: Hou
+    email: ecstayalive@163.com
+repository-code: 'https://github.com/ecstayalive/GP'
+abstract: >-
+  Robotic manipulation using Deep Reinforcement Learning
+keywords:
+  - Deep Reinforcement Learning
+  - Deep Neural Network
+license: Apache-2.0
+version: 1.0.0
+date-released: '2022-06-26'

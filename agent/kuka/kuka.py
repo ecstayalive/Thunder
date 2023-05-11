@@ -126,20 +126,15 @@ class Kuka:
         for i in range(3):
             self.end_effector_pos[i] = self.end_effector_pos[i] + dxyz[i]
         # Restrict x, y, z axis
-        if self.end_effector_pos[0] > 0.65:
-            self.end_effector_pos[0] = 0.65
-        if self.end_effector_pos[0] < 0.50:
-            self.end_effector_pos[0] = 0.50
-        if self.end_effector_pos[1] < -0.17:
-            self.end_effector_pos[1] = -0.17
-        if self.end_effector_pos[1] > 0.22:
-            self.end_effector_pos[1] = 0.22
+        self.end_effector_pos[0] = min(self.end_effector_pos[0], 0.65)
+        self.end_effector_pos[0] = max(self.end_effector_pos[0], 0.50)
+        self.end_effector_pos[1] = max(self.end_effector_pos[1], -0.17)
+        self.end_effector_pos[1] = min(self.end_effector_pos[1], 0.22)
         pos = self.end_effector_pos
         orn = p.getQuaternionFromEuler([0, -np.pi, 0])  # -np.pi,yaw])
         if self.use_null_space == 1:
-            if self.use_orientation == 1:
-                # joint_poses = self.accurateCalculateInverseKinematics(
-                joint_poses = p.calculateInverseKinematics(
+            joint_poses = (
+                p.calculateInverseKinematics(
                     self.kuka_uid,
                     self.kuka_end_effector_index,
                     pos,
@@ -149,9 +144,8 @@ class Kuka:
                     self.jr,
                     self.rp,
                 )
-            else:
-                # joint_poses = self.accurateCalculateInverseKinematics(
-                joint_poses = p.calculateInverseKinematics(
+                if self.use_orientation == 1
+                else p.calculateInverseKinematics(
                     self.kuka_uid,
                     self.kuka_end_effector_index,
                     pos,
@@ -160,21 +154,21 @@ class Kuka:
                     jointRanges=self.jr,
                     restPoses=self.rp,
                 )
+            )
+        elif self.use_orientation == 1:
+            # joint_poses = self.accurateCalculateInverseKinematics(
+            joint_poses = p.calculateInverseKinematics(
+                self.kuka_uid,
+                self.kuka_end_effector_index,
+                pos,
+                orn,
+                jointDamping=self.jd,
+            )
         else:
-            if self.use_orientation == 1:
-                # joint_poses = self.accurateCalculateInverseKinematics(
-                joint_poses = p.calculateInverseKinematics(
-                    self.kuka_uid,
-                    self.kuka_end_effector_index,
-                    pos,
-                    orn,
-                    jointDamping=self.jd,
-                )
-            else:
-                # joint_poses = self.accurateCalculateInverseKinematics(
-                joint_poses = p.calculateInverseKinematics(
-                    self.kuka_uid, self.kuka_end_effector_index, pos
-                )
+            # joint_poses = self.accurateCalculateInverseKinematics(
+            joint_poses = p.calculateInverseKinematics(
+                self.kuka_uid, self.kuka_end_effector_index, pos
+            )
         for item in enumerate(self.motor_indices[:7]):
             # print(i)
             p.setJointMotorControl2(
@@ -294,6 +288,6 @@ class Kuka:
             ]
             dist2 = np.sqrt(diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2])
             closeEnough = dist2 < threshold
-            iter = iter + 1
+            iter += 1
         # print ("Num iter: "+str(iter) + "threshold: "+str(dist2))
         return joint_poses
