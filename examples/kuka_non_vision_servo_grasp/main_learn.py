@@ -28,12 +28,13 @@ if __name__ == "__main__":
         render=False,
         width=256,
         height=256,
-        show_image=True,
+        show_image=False,
     )
     obs = env.reset()
     model = SAC(env=env)
     try:
-        model.learn(500000)
+        model.learn(1000000)
+        model.save_model()
     except BaseException as e:
         model.save_model()
         traceback.print_exc()

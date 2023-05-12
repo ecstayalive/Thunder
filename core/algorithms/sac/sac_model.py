@@ -16,7 +16,7 @@ class SAC:
     def __init__(
         self,
         env: Callable,
-        buffer_size: int = 10000,
+        buffer_capacity: int = 1000,
         gamma: float = 0.98,
         temperature_factor: float = 0.8,
         lr_actor: float = 1e-5,
@@ -50,11 +50,9 @@ class SAC:
         self.net_analysis_iter = 1000
         self.learning_iter = 20
         self.evaluate_iter = 1000
-        self.repeat_learning_times = 40
 
         # buffer setting
-        self.reply_buffer = ReplyBuffer()
-        self.buffer_capacity = buffer_size
+        self.reply_buffer = ReplyBuffer(capacity=buffer_capacity)
         self.sample_batch_size = sample_batch_size
 
         # record training information
@@ -158,7 +156,8 @@ class SAC:
             _, sample_actions, actions_log_prob = self.actor.sample(obs)
             q_value_of_obs_sample_action = self.critic_q(obs, sample_actions)
             v_value_target = (
-                q_value_of_obs_sample_action - self.temperature_factor * actions_log_prob
+                q_value_of_obs_sample_action
+                - self.temperature_factor * actions_log_prob
             )
         v_value_of_obs = self.critic_v(obs)
         v_value_loss = self.loss_function(v_value_of_obs, v_value_target)
