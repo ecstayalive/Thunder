@@ -5,6 +5,7 @@ import numpy as np
 
 import torch
 from torch import nn
+from torch.nn.utils import clip_grad_norm_
 from torch.utils.tensorboard import SummaryWriter
 
 from ...memory import ReplyBuffer
@@ -16,11 +17,10 @@ class SAC:
     def __init__(
         self,
         env: Callable,
-        buffer_capacity: int = 1000,
+        buffer_capacity: int = 2000,
         gamma: float = 0.98,
         temperature_factor: float = 0.8,
-        lr_actor: float = 1e-5,
-        lr_critic: Tuple[float, float] = [1e-5, 1e-5],
+        lr: float = [1e-5, 1e-5, 1e-5],
         sample_batch_size: int = 16,
         model_file_path: str = "model/sac_model.pkl",
         logfile_dir: str = "log/sac/",
@@ -40,16 +40,17 @@ class SAC:
         )
         self.gamma = gamma
         self.temperature_factor = temperature_factor
-        self.lr_actor = lr_actor
-        self.lr_critic_q = lr_critic[0]
-        self.lr_critic_v = lr_critic[1]
+        self.lr_actor = lr[0]
+        self.lr_critic_v = lr[1]
+        self.lr_critic_q = lr[2]
         self.tau = 1e-3
-        # self.clip_grad = 1
+        # gradient clip
+        self.grad_max_norm = 1
 
         # some frequency
         self.net_analysis_iter = 1000
-        self.learning_iter = 20
-        self.evaluate_iter = 1000
+        self.learning_iter = 40
+        self.evaluate_iter = 2000
 
         # buffer setting
         self.reply_buffer = ReplyBuffer(capacity=buffer_capacity)
@@ -68,7 +69,10 @@ class SAC:
             print("Existing a sac model, now, load it")
             self.load_model()
         else:
-            self.critic_q = CriticQ(
+            self.critic_q1 = CriticQ(
+                self.obs_dim, self.action_dim, device=self.training_device
+            )
+            self.critic_q2 = CriticQ(
                 self.obs_dim, self.action_dim, device=self.training_device
             )
             self.critic_v = CriticV(self.obs_dim, device=self.training_device)
@@ -84,22 +88,17 @@ class SAC:
             # training step, support checkpoint
             self.learning_step = 0
         # Initialize the optimizer
-        # Use SGD
-        self.actor_optimizer = torch.optim.SGD(self.actor.parameters(), self.lr_actor)
-        self.q_value_optimizer = torch.optim.SGD(
-            self.critic_q.parameters(), self.lr_critic_q
-        )
-        self.v_value_optimizer = torch.optim.SGD(
+        # Use Adam
+        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), self.lr_actor)
+        self.v_value_optimizer = torch.optim.Adam(
             self.critic_v.parameters(), self.lr_critic_v
         )
-        # # Use Adam
-        # self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), self.lr_actor)
-        # self.q_value_optimizer = torch.optim.Adam(
-        #     self.critic_q.parameters(), self.lr_critic_q
-        # )
-        # self.v_value_optimizer = torch.optim.Adam(
-        #     self.critic_v.parameters(), self.lr_critic_v
-        # )
+        self.q1_value_optimizer = torch.optim.Adam(
+            self.critic_q1.parameters(), self.lr_critic_q
+        )
+        self.q2_value_optimizer = torch.optim.Adam(
+            self.critic_q2.parameters(), self.lr_critic_q
+        )
 
         # Loss function
         self.loss_function = nn.MSELoss()
@@ -142,7 +141,8 @@ class SAC:
         # Setting train mode
         self.actor.train()
         self.critic_v.train()
-        self.critic_q.train()
+        self.critic_q1.train()
+        self.critic_q2.train()
 
         sample_transitions = self.reply_buffer.sample(self.sample_batch_size)
         for key in sample_transitions.keys():
@@ -151,51 +151,69 @@ class SAC:
             )
         # SAC update algorithm
         # update critic v
+        # calculate v loss
         obs = sample_transitions["observation"]
-        with torch.no_grad():
-            _, sample_actions, actions_log_prob = self.actor.sample(obs)
-            q_value_of_obs_sample_action = self.critic_q(obs, sample_actions)
-            v_value_target = (
-                q_value_of_obs_sample_action
-                - self.temperature_factor * actions_log_prob
-            )
+        _, sample_actions, actions_log_prob = self.actor.sample(obs)
+        q_value_of_obs_sample_action = torch.min(
+            self.critic_q1(obs, sample_actions), self.critic_q2(obs, sample_actions)
+        )
+        v_value_target = (
+            q_value_of_obs_sample_action - self.temperature_factor * actions_log_prob
+        )
         v_value_of_obs = self.critic_v(obs)
         v_value_loss = self.loss_function(v_value_of_obs, v_value_target)
+        # update v function parameters
         self.v_value_optimizer.zero_grad()
-        v_value_loss.backward()
+        v_value_loss.backward(retain_graph=True)
+        clip_grad_norm_(self.critic_v.parameters(), self.grad_max_norm)
         self.v_value_optimizer.step()
         # recording the v value loss
         self.writer.add_scalar(
             "SAC/v_value_loss", v_value_loss.cpu(), self.learning_step
         )
 
-        # update critic q
-        actions = sample_transitions["action"]
-        rewards = sample_transitions["reward"]
-        next_obs = sample_transitions["next_observation"]
-        q_value_of_obs_action = self.critic_q(obs, actions)
-        with torch.no_grad():
-            q_value_target = rewards + self.gamma * self.target_critic_v(next_obs)
-        q_value_loss = self.loss_function(q_value_of_obs_action, q_value_target)
-        self.q_value_optimizer.zero_grad()
-        q_value_loss.backward()
-        self.q_value_optimizer.step()
-        # recording the q value loss
-        self.writer.add_scalar(
-            "SAC/q_value_loss", q_value_loss.cpu(), self.learning_step
-        )
-
         # update policy pi
-        _, sample_actions, actions_log_prob = self.actor.sample(obs)
-        q_value_of_obs_sample_action = self.critic_q(obs, sample_actions)
+        # calculate policy loss
         actor_loss = torch.mean(
             self.temperature_factor * actions_log_prob - q_value_of_obs_sample_action
         )
+        # update policy parameters
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
+        clip_grad_norm_(self.actor.parameters(), self.grad_max_norm)
         self.actor_optimizer.step()
         # recording the actor loss
         self.writer.add_scalar("SAC/actor_loss", actor_loss.cpu(), self.learning_step)
+
+        # update critic q
+        # calculate q1 and q2 value loss
+        actions = sample_transitions["action"]
+        rewards = sample_transitions["reward"]
+        next_obs = sample_transitions["next_observation"]
+        q_value_target = rewards + self.gamma * self.target_critic_v(next_obs)
+        # q1 value loss
+        q1_value_of_obs_action = self.critic_q1(obs, actions)
+        q1_value_loss = self.loss_function(q1_value_of_obs_action, q_value_target)
+        # update q1 function parameters
+        self.q1_value_optimizer.zero_grad()
+        q1_value_loss.backward(retain_graph=True)
+        clip_grad_norm_(self.critic_q1.parameters(), self.grad_max_norm)
+        self.q1_value_optimizer.step()
+        # q2 value loss
+        q2_value_of_obs_action = self.critic_q2(obs, actions)
+        q2_value_loss = self.loss_function(q2_value_of_obs_action, q_value_target)
+        # update q2 function parameters
+        self.q2_value_optimizer.zero_grad()
+        q2_value_loss.backward()
+        clip_grad_norm_(self.critic_q2.parameters(), self.grad_max_norm)
+        self.q2_value_optimizer.step()
+        # recording the q1 and q2 value loss
+        self.writer.add_scalar(
+            "SAC/q1_value_loss", q1_value_loss.cpu(), self.learning_step
+        )
+        self.writer.add_scalar(
+            "SAC/q2_value_loss", q2_value_loss.cpu(), self.learning_step
+        )
 
         # soft update target v value network
         for target_critic_v_param, critic_v_param in zip(
@@ -207,6 +225,8 @@ class SAC:
 
     def evaluate_model(self, total_evaluating_steps: int = 100) -> None:
         self.env.is_test = True
+        self.actor.eval()
+
         evaluating_step = 0
         successful_times = 0
 
@@ -233,8 +253,9 @@ class SAC:
     def save_model(self):
         model = {
             "actor": self.actor,
-            "critic_q": self.critic_q,
             "critic_v": self.critic_v,
+            "critic_q1": self.critic_q1,
+            "critic_q2": self.critic_q2,
             "target_critic_v": self.target_critic_v,
             "learning_step": self.learning_step,
         }
@@ -243,7 +264,8 @@ class SAC:
     def load_model(self):
         model = torch.load(self.model_file_path, map_location=self.training_device)
         self.actor = model["actor"]
-        self.critic_q = model["critic_q"]
         self.critic_v = model["critic_v"]
+        self.critic_q1 = model["critic_q1"]
+        self.critic_q2 = model["critic_q2"]
         self.target_critic_v = model["target_critic_v"]
         self.learning_step = model["learning_step"]
