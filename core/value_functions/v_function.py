@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch import nn, Tensor
 from torch.nn import Module
 
-from ..nn import CNNDefaultBlock1, MLPDefaultBlock
+from ..nn import CNNDefaultBlock1, MLPDefaultBlock1
 
 ImageType = Tuple[int, int, int]
 MixType = Tuple[ImageType, int]
@@ -21,10 +21,10 @@ class VFunction(Module):
         super(VFunction, self).__init__()
         factor_kwargs = {"device": device, "dtype": dtype}
         if isinstance(observation_features, int):
-            self.features_extractor = MLPDefaultBlock(
+            self.features_extractor = MLPDefaultBlock1(
                 observation_features, 256, **factor_kwargs
             )
-            self.calculate_v_mlp = MLPDefaultBlock(256, 1, **factor_kwargs)
+            self.calculate_v_mlp = MLPDefaultBlock1(256, 1, **factor_kwargs)
         elif len(observation_features) == 3:
             self.features_extractor = nn.Sequential(
                 CNNDefaultBlock1(observation_features[0], **factor_kwargs),
@@ -39,7 +39,9 @@ class VFunction(Module):
                     **factor_kwargs
                 )
                 features_numbers = self.features_extractor(testing_input_data).shape[1]
-            self.calculate_v_mlp = MLPDefaultBlock(features_numbers, 1, **factor_kwargs)
+            self.calculate_v_mlp = MLPDefaultBlock1(
+                features_numbers, 1, **factor_kwargs
+            )
         elif len(observation_features) == 2:
             observation_features = observation_features[0]
             additional_obs_dim = observation_features[1]
@@ -56,10 +58,12 @@ class VFunction(Module):
                     **factor_kwargs
                 )
                 features_numbers = self.features_extractor(testing_input_data).shape[1]
-            self.additional_obs_mlp = MLPDefaultBlock(
+            self.additional_obs_mlp = MLPDefaultBlock1(
                 additional_obs_dim, features_numbers, **factor_kwargs
             )
-            self.calculate_v_mlp = MLPDefaultBlock(features_numbers, 1, **factor_kwargs)
+            self.calculate_v_mlp = MLPDefaultBlock1(
+                features_numbers, 1, **factor_kwargs
+            )
 
     def forward(self, observation: Tensor, additional_obs: Tensor = None) -> Tensor:
         if additional_obs is None:

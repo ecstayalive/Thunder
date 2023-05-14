@@ -4,7 +4,7 @@ import torch
 from torch import nn, Tensor
 from torch.nn import Module
 
-from ..nn import CNNDefaultBlock1, MLPDefaultBlock
+from ..nn import CNNDefaultBlock1, MLPDefaultBlock1
 
 __all__ = ["CNNStochasticPolicy", "CNNDeterministicPolicy"]
 
@@ -58,10 +58,10 @@ class CNNStochasticPolicy(Module):
                 )
             ).shape[1]
 
-        self.mean_mlp = MLPDefaultBlock(
+        self.mean_mlp = MLPDefaultBlock1(
             in_numbers_of_fc, out_features, **factory_kwargs
         )
-        self.log_std_mlp = MLPDefaultBlock(
+        self.log_std_mlp = MLPDefaultBlock1(
             in_numbers_of_fc, out_features, **factory_kwargs
         )
 
@@ -118,7 +118,7 @@ class CNNDeterministicPolicy(Module):
                 )
             ).shape[1]
 
-        self.action_mlp = MLPDefaultBlock(
+        self.action_mlp = MLPDefaultBlock1(
             in_numbers_of_fc, out_features, **factory_kwargs
         )
 

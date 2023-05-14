@@ -4,7 +4,7 @@ import torch
 from torch import nn, Tensor
 from torch.nn import Module
 
-from ..nn import CNNDefaultBlock1, MLPDefaultBlock
+from ..nn import CNNDefaultBlock1, MLPDefaultBlock1
 
 ImageType = Tuple[int, int, int]
 MixType = Tuple[ImageType, int]
@@ -21,11 +21,11 @@ class QFunction(Module):
         super(QFunction, self).__init__()
         factor_kwargs = {"device": device, "dtype": dtype}
         if isinstance(observation_features, int):
-            self.features_extractor = MLPDefaultBlock(
+            self.features_extractor = MLPDefaultBlock1(
                 observation_features, 256, **factor_kwargs
             )
-            self.action_mpl = MLPDefaultBlock(action_features, 256, **factor_kwargs)
-            self.calculate_q_mlp = MLPDefaultBlock(256, 1, **factor_kwargs)
+            self.action_mpl = MLPDefaultBlock1(action_features, 256, **factor_kwargs)
+            self.calculate_q_mlp = MLPDefaultBlock1(256, 1, **factor_kwargs)
         else:
             # NOTE: there are two different ways to implement the deducing network
             #       One is purely MLP, another is CNN blocks plus MLP.
@@ -52,10 +52,10 @@ class QFunction(Module):
                 action_mlp_output_features = self.features_extractor(
                     testing_input_data
                 ).shape[1]
-            self.action_mlp = MLPDefaultBlock(
+            self.action_mlp = MLPDefaultBlock1(
                 action_dim, action_mlp_output_features, **factor_kwargs
             )
-            self.calculate_q_mlp = MLPDefaultBlock(
+            self.calculate_q_mlp = MLPDefaultBlock1(
                 action_mlp_output_features, 1, **factor_kwargs
             )
 

@@ -1,9 +1,11 @@
-from .cnn_blocks import CNNDefaultBlock1, ResidualBasicBlock, ResidualBottleneckBlock
-from .mlp_blocks import MLPDefaultBlock
+from .cnn_blocks import *
+from .mlp_blocks import *
 
 __all__ = [
     "CNNDefaultBlock1",
-    "MLPDefaultBlock",
+    "CNNDefaultBlock2",
+    "MLPDefaultBlock1",
+    "MLPDefaultBlock2",
     "ResidualBasicBlock",
     "ResidualBottleneckBlock",
 ]

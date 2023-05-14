@@ -159,7 +159,8 @@ class JacoGraspEnvFramework(
         ########################################################################
         # Choose the objects in the bin
         ########################################################################
-        self.num_objects = np.random.randint(1, 6)
+        # self.num_objects = np.random.randint(1, 6)
+        self.num_objects = 5
         urdf_list = self.get_random_objects(self.num_objects, self.is_test)
         self.object_uids = self.place_objects_randomly(urdf_list)
         self.observation = self.get_observation()

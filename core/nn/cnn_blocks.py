@@ -5,7 +5,12 @@ import torch.nn.functional as F
 from torch import nn, Tensor
 from torch.nn import Module
 
-__all__ = ["CNNDefaultBlock1", "ResidualBasicBlock", "ResidualBottleneckBlock"]
+__all__ = [
+    "CNNDefaultBlock1",
+    "CNNDefaultBlock2",
+    "ResidualBasicBlock",
+    "ResidualBottleneckBlock",
+]
 
 
 class CNNDefaultBlock1(Module):
