@@ -17,7 +17,7 @@ The second kind of grasping task is vision servo based grasping task, and the mo
 ![vision_servo_based_grasp_task](./docs/pictures/vision_servo_based_grasp_task.png)
 
 ## The DRL Algorithm
-I use the SAC(soft actor-critic) algorithm to train the model. Actually, because of the limitation of hardware, the model has to be small. 
+I use the SAC(soft actor-critic) algorithm to train the model. Actually, because of the limitation of hardware, the model has to be small.
 ### actor
 ![actor](./docs/pictures/SAC_Actor.png)
 ### critic

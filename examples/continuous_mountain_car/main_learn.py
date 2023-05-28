@@ -1,6 +1,6 @@
 """Main file
-This file is used to train a model for kuka's vision servo
-grasp task.
+This file is used to train a model for Continuous Mountain Car
+task.
 
 """
 
@@ -16,23 +16,31 @@ sys.path.append(package_path)
 os.chdir(package_path)
 import traceback
 
+# from core.model import GPModel
 from core.algorithms import SAC
 
 ########################################################################
 # Train a model
 ########################################################################
-from envs import KukaVisionServoGraspEnv
+from envs import ContinuousMountainCarEnv
 
 if __name__ == "__main__":
-    env = KukaVisionServoGraspEnv(
-        render=False,
-        width=128,
-        height=128,
-        show_image=True,
+    env = ContinuousMountainCarEnv(render_mode=None, reward_scale=0.01)
+    model = SAC(
+        env=env,
+        buffer_capacity=10000,
+        tau=0.005,
+        optimizer="Adam",
     )
-    model = SAC(env=env)
     try:
-        model.evaluate_model(100)
+        model.learn(
+            4000000,
+            sample_batch_size=64,
+            reward_scale=1 / 8,
+            evaluating_period=999,
+            evaluating_times=1,
+        )
+        model.save_model()
     except BaseException as e:
-        model.save()
+        model.save_model()
         traceback.print_exc()

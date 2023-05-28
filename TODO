@@ -1,5 +1,5 @@
-TODO: Develop a new CNN architecture which accepts variant size input image.
+TODO: Refactor the buffer
+TODO: Develop a new CNN architecture which accepts variant size input image
 TODO: Update a new more general reinforcement learning algorithm for complex tasks
-TODO: Refine the sac algorithm
 TODO: Add other reinforcement learning algorithms including PPO, TRPO
-TODO: Use the MuJoCo simulation
+TODO: Use the MuJoCo simulation or RaiSim

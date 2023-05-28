@@ -1,6 +1,6 @@
 """Main file
-This file is used to train a model for kuka's vision servo
-grasp task.
+This file is used to train a model for Continuous Mountain Car
+task.
 
 """
 
@@ -16,23 +16,30 @@ sys.path.append(package_path)
 os.chdir(package_path)
 import traceback
 
-from core.algorithms import SAC
+from core.algorithms import PPO, SAC
 
 ########################################################################
 # Train a model
 ########################################################################
-from envs import KukaVisionServoGraspEnv
+from envs import PendulumEnv
 
 if __name__ == "__main__":
-    env = KukaVisionServoGraspEnv(
-        render=False,
-        width=128,
-        height=128,
-        show_image=True,
+    env = PendulumEnv(render_mode=None)
+    model = PPO(
+        env=env,
+        # buffer_capacity=100000,
+        # tau=0.005,
+        action_scale=2.0,
+        optimizer="Adam",
     )
-    model = SAC(env=env)
     try:
-        model.evaluate_model(100)
+        model.learn(
+            50000,
+            reward_scale=1 / 8,
+            reward_bias=8,
+            evaluating_period=100,
+        )
+        # model.save_model()
     except BaseException as e:
-        model.save()
+        # model.save_model()
         traceback.print_exc()

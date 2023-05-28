@@ -1,19 +1,33 @@
 import warnings
 
-import torch.nn.functional as F
-
 from torch import nn, Tensor
 from torch.nn import Module
 
+from ..utils import init_module_
+
 __all__ = [
-    "CNNDefaultBlock1",
-    "CNNDefaultBlock2",
+    "ReducingCnnBlock",
+    "AdaptiveReducingCnnBlock",
     "ResidualBasicBlock",
     "ResidualBottleneckBlock",
 ]
 
+# NOTE: Reinforcement learning can't use max pool as well as batch norm layer.
+# TODO: Develop a new CNN architecture which accepts variant size input image.
 
-class CNNDefaultBlock1(Module):
+
+class ReducingCnnBlock(Module):
+    """Reducing Convolution Block, nine convolution layers.
+
+    The feature of this convolution block is that it has fewer parameters,
+    and uses strides parameter quickly reducing the image size
+
+    Args:
+        in_features: means input channels
+        out_features: means output channels
+
+    """
+
     def __init__(
         self,
         in_features: int,
@@ -21,22 +35,7 @@ class CNNDefaultBlock1(Module):
         device=None,
         dtype=None,
     ) -> None:
-        """A default model of Convolution Blocks
-
-        Args:
-            in_features:
-            out_features:
-
-        NOTE:
-            In this network architecture, we use fc layer. And to get the number
-            of the linear layer, this policy do a virtual forward calculation to
-            make sure the neural numbers. But it seems there is a better CNN
-            architecture which supports accepting all kinds of size of the input
-            image.
-            TODO: Develop a new CNN architecture which accepts variant size input image.
-
-        """
-        super(CNNDefaultBlock1, self).__init__()
+        super(ReducingCnnBlock, self).__init__()
         factory_kwargs = {"device": device, "dtype": dtype}
         self.feature_exactor = nn.Sequential(
             nn.Conv2d(
@@ -49,6 +48,7 @@ class CNNDefaultBlock1(Module):
             ),
             nn.ReLU(),
             ResidualBasicBlock(32, **factory_kwargs),
+            nn.ReLU(),
             nn.Conv2d(
                 32,
                 64,
@@ -59,6 +59,7 @@ class CNNDefaultBlock1(Module):
             ),
             nn.ReLU(),
             ResidualBasicBlock(64, **factory_kwargs),
+            nn.ReLU(),
             nn.Conv2d(
                 64,
                 128,
@@ -85,37 +86,39 @@ class CNNDefaultBlock1(Module):
                 padding=0,
                 **factory_kwargs,
             ),
-            nn.ReLU(),
+            # nn.ReLU(),
             # nn.Flatten(),
         )
+        self.initialize_parameters()
+
+    def initialize_parameters(self):
+        init_module_(self.feature_exactor)
 
     def forward(self, input: Tensor) -> Tensor:
         return self.feature_exactor(input)
 
 
-class CNNDefaultBlock2(Module):
+class AdaptiveReducingCnnBlock(Module):
+    """Adaptive Reducing Convolution Block, nine convolution layers
+
+    This convolution block has the same architecture of Convolution
+    Block 1, which means that it has fewer parameters, and it can
+    use strides parameter to reduce the image size quickly. But it
+    uses adaptive parameters, which means the channel of the network
+    will change with the input channel atomically.
+
+    Args:
+        in_features:
+
+    """
+
     def __init__(
         self,
         in_features: int,
         device=None,
         dtype=None,
     ) -> None:
-        """A default model of Convolution Blocks
-
-        Args:
-            in_features:
-            out_features:
-
-        NOTE:
-            In this network architecture, we use fc layer. And to get the number
-            of the linear layer, this policy do a virtual forward calculation to
-            make sure the neural numbers. But it seems there is a better CNN
-            architecture which supports accepting all kinds of size of the input
-            image.
-            TODO: Develop a new CNN architecture which accepts variant size input image.
-
-        """
-        super(CNNDefaultBlock2, self).__init__()
+        super(AdaptiveReducingCnnBlock, self).__init__()
         factory_kwargs = {"device": device, "dtype": dtype}
         self.feature_exactor = nn.Sequential(
             nn.Conv2d(
@@ -128,6 +131,7 @@ class CNNDefaultBlock2(Module):
             ),
             nn.ReLU(),
             ResidualBasicBlock(in_features * 4, in_features * 4, **factory_kwargs),
+            nn.ReLU(),
             nn.Conv2d(
                 in_features * 4,
                 in_features * 8,
@@ -138,6 +142,7 @@ class CNNDefaultBlock2(Module):
             ),
             nn.ReLU(),
             ResidualBasicBlock(in_features * 8, in_features * 8, **factory_kwargs),
+            nn.ReLU(),
             nn.Conv2d(
                 in_features * 8,
                 in_features * 16,
@@ -164,9 +169,13 @@ class CNNDefaultBlock2(Module):
                 padding=0,
                 **factory_kwargs,
             ),
-            nn.ReLU(),
+            # nn.ReLU(),
             # nn.Flatten(),
         )
+        self.initialize_parameters()
+
+    def initialize_parameters(self):
+        init_module_(self.feature_exactor)
 
     def forward(self, input: Tensor) -> Tensor:
         return self.feature_exactor(input)
@@ -202,10 +211,14 @@ class ResidualBasicBlock(Module):
                 **factory_kwargs,
             ),
         )
+        self.initialize_parameters()
+
+    def initialize_parameters(self):
+        init_module_(self.straight_pass)
 
     def forward(self, input: Tensor) -> Tensor:
         straight_output = self.straight_pass(input)
-        return F.relu(straight_output + input)
+        return straight_output + input
 
 
 class ResidualBottleneckBlock(Module):
@@ -252,8 +265,13 @@ class ResidualBottleneckBlock(Module):
                 **factory_kwargs,
             )
         )
+        self.initialize_parameters()
+
+    def initialize_parameters(self):
+        init_module_(self.straight_pass)
+        init_module_(self.short_cut_pass)
 
     def forward(self, input: Tensor) -> Tensor:
         straight_output = self.straight_pass(input)
         short_cut_output = self.short_cut_pass(input)
-        return F.relu(straight_output + short_cut_output)
+        return straight_output + short_cut_output

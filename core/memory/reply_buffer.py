@@ -7,15 +7,16 @@ import numpy as np
 
 from .memory import Memory
 
+# TODO: Optimize the speed.
+# TODO: Add support for multi-agent simulation environment.
 
-class ReplyBuffer(Memory):
+
+class ReplayBuffer(Memory):
     """Reply Buffer."""
 
     def __init__(
         self,
         capacity: int = 10000,
-        # observation_shape: Tuple[int, int, int] = None,
-        # action_shape: Tuple[int, int] = None,
         save_buffer: bool = False,
         buffer_file_path: str = None,
     ) -> None:
@@ -23,13 +24,11 @@ class ReplyBuffer(Memory):
             raise ValueError(
                 "It seems you are like to save buffer file however you don't give a saving path."
             )
-        super(ReplyBuffer, self).__init__()
+        super(ReplayBuffer, self).__init__()
         self.capacity = capacity
-        # self.observation_shape = observation_shape
-        # self.action_shape = action_shape
         self.save_buffer = save_buffer
         self.buffer_file_path = buffer_file_path
-        self.check_buffer_file(buffer_file_path)
+        self.check_buffer(buffer_file_path)
 
     def remember(self, experience: Dict[str, Any]) -> None:
         """To remember experiences.
@@ -102,7 +101,7 @@ class ReplyBuffer(Memory):
 
         return sampling_transitions
 
-    def check_buffer_file(self, buffer_file_path: str) -> None:
+    def check_buffer(self, buffer_file_path: str) -> None:
         """This function is used to check whether the buffer file exists.
         This function will check if the buffer file exists, and if it is
         existing, load it. And if not, create a buffer.

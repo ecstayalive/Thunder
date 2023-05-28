@@ -1,4 +1,5 @@
 from .memory import Memory
-from .reply_buffer import ReplyBuffer
+from .reply_buffer import ReplayBuffer
+from .rollout_buffer import RolloutBuffer
 
-__all__ = ["Memory", "ReplyBuffer"]
+__all__ = ["Memory", "ReplayBuffer", "RolloutBuffer"]

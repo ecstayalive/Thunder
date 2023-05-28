@@ -30,10 +30,21 @@ if __name__ == "__main__":
         height=256,
         show_image=False,
     )
-    obs = env.reset()
-    model = SAC(env=env)
+    model = SAC(
+        env=env,
+        buffer_capacity=2000,
+        tau=0.001,
+        lr=(1e-4, 1e-4, 1e-4),
+        optimizer="Adam",
+    )
     try:
-        model.learn(1000000)
+        model.learn(
+            500000,
+            sample_batch_size=32,
+            reward_scale=0.1,
+            evaluating_period=2000,
+            evaluating_times=100,
+        )
         model.save_model()
     except BaseException as e:
         model.save_model()

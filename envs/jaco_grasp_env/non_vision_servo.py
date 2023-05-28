@@ -7,7 +7,7 @@ is based on vision.
 """
 
 import pybullet as p
-from gym import spaces
+from gymnasium import spaces
 
 from .framework import JacoGraspEnvFramework
 
@@ -38,16 +38,16 @@ class JacoNonVisionServoGraspEnv(JacoGraspEnvFramework):
             show_image,
             use_depth_image,
         )
+        self.env_name = "JacoNonVisionServoGrasp"
         self.vision_servo = False
-        self.seed()
-        self.reset()
-
-    def reset(self):
-        self.attempted_grasp = False
         ########################################################################
         # action spaces
         ########################################################################
         self.action_space = spaces.Box(low=-10, high=10, shape=(3,))  # dx, dy, dangle
+        self.seed()
+
+    def reset(self):
+        self.attempted_grasp = False
         return self.env_reset()
 
     def step(self, action):
@@ -103,7 +103,7 @@ class JacoNonVisionServoGraspEnv(JacoGraspEnvFramework):
                 # If any block is above height, provide reward.
                 if pos[2] > 0.2:
                     self.successful_times += 1
-                    reward = 1.0
+                    reward = 100.0
                     break
 
         return reward

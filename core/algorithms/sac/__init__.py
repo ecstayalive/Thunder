@@ -1,3 +1,3 @@
-from .sac_model import SAC
+from .sac import SAC
 
 __all__ = ["SAC"]

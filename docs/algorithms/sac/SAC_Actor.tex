@@ -3,7 +3,7 @@
 \usepackage{ctex}% 中文支持
 \usepackage{tikz}
 
-\subimport{./}{init}
+\subimport{../}{init}
 \usetikzlibrary{positioning}
 \usetikzlibrary{3d} %for including external image
 \usetikzlibrary{quotes,angles}
@@ -67,9 +67,9 @@ maxpool
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 卷积单元需要乘以2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\node[shift={(4, 0, 0)}, canvas is xy plane at z=0] (ellipsis1) at (p1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
-\node[shift={(2, 0, 0)}, canvas is xy plane at z=0] (temp) at (ellipsis1) {\includegraphics[width=2cm,height=2cm]{x2.png}};
-\node[shift={(2, 0, 0)}, canvas is xy plane at z=0] (ellipsis2) at (temp) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+\node[shift={(4, 0, 0)}, canvas is xy plane at z=0] (ellipsis1) at (p1-east) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
+\node[shift={(2, 0, 0)}, canvas is xy plane at z=0] (temp) at (ellipsis1) {\includegraphics[width=2cm,height=2cm]{../x2.png}};
+\node[shift={(2, 0, 0)}, canvas is xy plane at z=0] (ellipsis2) at (temp) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
 \draw [connection]  (p1-east) -- node {\midarrow} (ellipsis1);
 % 卷积栈
 \coordinate (point3) at ([shift={(0, -10, 0)}] ellipsis2);
@@ -127,10 +127,10 @@ maxpool
         fill=\PcColor,bandfill=\PcSquashColor,%
         height=8,width=3,depth=3}};
 % 省略号
-\node[shift={(0, 0, 2.7)}, canvas is zy plane at x=0] (temp) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
-\node[shift={(0, 0, -1.2)}, canvas is zy plane at x=0] (temp) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+\node[shift={(0, 0, 2.7)}, canvas is zy plane at x=0] (temp) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
+\node[shift={(0, 0, -1.2)}, canvas is zy plane at x=0] (temp) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Draw Dotted Edges 
+%% Draw Dotted Edges
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \draw[densely dashed]
     (fc1-5-west)++(3, 3.7, 8) coordinate(a) -- (cr4-nearnortheast)
@@ -168,7 +168,7 @@ maxpool
         fill=\PcColor,bandfill=\PcSquashColor,%
         height=8,width=3,depth=3}};
 % 省略号
-\node[shift={(12.3, 0, 0)}, canvas is zy plane at x=0] (ellipsis3) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+\node[shift={(12.3, 0, 0)}, canvas is zy plane at x=0] (ellipsis3) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Linear Layer1和Linear Layer2之间的连线
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

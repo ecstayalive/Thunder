@@ -6,7 +6,7 @@ vision servo based grasp environment.
 """
 
 import pybullet as p
-from gym import spaces
+from gymnasium import spaces
 
 from .framework import JacoGraspEnvFramework
 
@@ -37,18 +37,18 @@ class JacoVisionServoGraspEnv(JacoGraspEnvFramework):
             show_image,
             use_depth_image,
         )
+        self.env_name = "JacoVisionServoGrasp"
         # 是否为视觉伺服
         self.vision_servo = True
-        self.seed()
-        self.reset()
-
-    def reset(self):
         ########################################################################
         # action spaces
         ########################################################################
         self.action_space = spaces.Box(
             low=-10, high=10, shape=(5,)
         )  # dx, dy, dz, dangle, finger
+        self.seed()
+
+    def reset(self):
         return self.env_reset()
 
     def step(self, action):
@@ -97,7 +97,7 @@ class JacoVisionServoGraspEnv(JacoGraspEnvFramework):
             # If any block is above height, provide reward.
             if pos[2] > 0.2:
                 self.successful_times += 1
-                reward = 1.0
+                reward = 100.0
                 break
 
         return reward

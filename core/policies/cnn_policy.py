@@ -4,16 +4,37 @@ import torch
 from torch import nn, Tensor
 from torch.nn import Module
 
-from ..nn import CNNDefaultBlock1, MLPDefaultBlock1
+from ..nn import MlpBlock2, ReducingCnnBlock
 
-__all__ = ["CNNStochasticPolicy", "CNNDeterministicPolicy"]
+__all__ = ["CnnGaussianStochasticPolicy", "CnnDeterministicPolicy"]
 
 # NOTE: Could we use dropout layer to achieve a stochastic policy.
 
 ImageType = Tuple[int, int, int]
 
 
-class CNNStochasticPolicy(Module):
+class CnnGaussianStochasticPolicy(Module):
+    """Initialization of the CNN policy
+
+    The policy would accept the shape of the input and the shape of
+    the output. Then it will confirm the network structure and parameter.
+    And it is worth noticing that this policy should be changed with
+    your requirement.
+
+    Args:
+        in_features:
+        out_features:
+
+    NOTE:
+        In this network architecture, we use fc layer. And to get the number
+        of the linear layer, this policy do a virtual forward calculation to
+        make sure the neural numbers. But it seems there is a better CNN
+        architecture which supports accepting all kinds of size of the input
+        image.
+    TODO: Develop a new CNN architecture which accepts variant size input image.
+
+    """
+
     def __init__(
         self,
         in_features: ImageType,
@@ -21,34 +42,16 @@ class CNNStochasticPolicy(Module):
         device=None,
         dtype=None,
     ) -> None:
-        """Initialization of the CNN policy
-
-        The policy would accept the shape of the input and the shape of
-        the output. Then it will confirm the network structure and parameter.
-        And it is worth noticing that this policy should be changed with
-        your requirement.
-
-        Args:
-            in_features:
-            out_features:
-
-        NOTE:
-            In this network architecture, we use fc layer. And to get the number
-            of the linear layer, this policy do a virtual forward calculation to
-            make sure the neural numbers. But it seems there is a better CNN
-            architecture which supports accepting all kinds of size of the input
-            image.
-        TODO: Develop a new CNN architecture which accepts variant size input image.
-
-        """
-        super(CNNStochasticPolicy, self).__init__()
+        super(CnnGaussianStochasticPolicy, self).__init__()
         factory_kwargs = {"device": device, "dtype": dtype}
-        self.feature_exactor = nn.Sequential(
-            CNNDefaultBlock1(in_features[0], **factory_kwargs), nn.Flatten()
+        self.features_extractor = nn.Sequential(
+            ReducingCnnBlock(in_features[0], **factory_kwargs),
+            nn.ReLU6(),
+            nn.Flatten(),
         )
         # confirm the input dim of fc layer
         with torch.no_grad():
-            in_numbers_of_fc = self.feature_exactor(
+            in_numbers_of_fc = self.features_extractor(
                 torch.zeros(
                     1,
                     in_features[0],
@@ -58,57 +61,56 @@ class CNNStochasticPolicy(Module):
                 )
             ).shape[1]
 
-        self.mean_mlp = MLPDefaultBlock1(
-            in_numbers_of_fc, out_features, **factory_kwargs
-        )
-        self.log_std_mlp = MLPDefaultBlock1(
-            in_numbers_of_fc, out_features, **factory_kwargs
-        )
+        self.mean_mlp = MlpBlock2(in_numbers_of_fc, out_features, **factory_kwargs)
+        self.log_std_mlp = MlpBlock2(in_numbers_of_fc, out_features, **factory_kwargs)
 
     def forward(self, input: Tensor) -> Tensor:
-        features = self.feature_exactor(input)
+        features = self.features_extractor(input)
         mean = self.mean_mlp(features)
         log_std = self.log_std_mlp(features)
 
         return mean, log_std
 
 
-class CNNDeterministicPolicy(Module):
+class CnnDeterministicPolicy(Module):
+    """Initialization of the CNN policy
+
+    The policy would accept the shape of the input and the shape of
+    the output. Then it will confirm the network structure and parameter.
+    And it is worth noticing that this policy should be changed with
+    your requirement.
+
+    Args:
+        in_features:
+        out_features:
+
+    NOTE:
+        In this network architecture, we use fc layer. And to get the number
+        of the linear layer, this policy do a virtual forward calculation to
+        make sure the neural numbers. But it seems there is a better CNN
+        architecture which supports accepting all kinds of size of the input
+        image.
+    TODO: Develop a new CNN architecture which accepts variant size input image.
+
+    """
+
     def __init__(
         self,
-        in_features: Tuple[int, int, int],
+        in_features: ImageType,
         out_features: int,
         device=None,
         dtype=None,
     ) -> None:
-        """Initialization of the CNN policy
-
-        The policy would accept the shape of the input and the shape of
-        the output. Then it will confirm the network structure and parameter.
-        And it is worth noticing that this policy should be changed with
-        your requirement.
-
-        Args:
-            in_features:
-            out_features:
-
-        NOTE:
-            In this network architecture, we use fc layer. And to get the number
-            of the linear layer, this policy do a virtual forward calculation to
-            make sure the neural numbers. But it seems there is a better CNN
-            architecture which supports accepting all kinds of size of the input
-            image.
-            TODO: Develop a new CNN architecture which accepts variant size input image.
-
-        """
-        super(CNNDeterministicPolicy, self).__init__()
+        super(CnnDeterministicPolicy, self).__init__()
         factory_kwargs = {"device": device, "dtype": dtype}
-        self.feature_exactor = nn.Sequential(
-            CNNDefaultBlock1(in_features[0], **factory_kwargs), nn.Flatten()
+        self.features_extractor = nn.Sequential(
+            ReducingCnnBlock(in_features[0], **factory_kwargs),
+            nn.ReLU6(),
+            nn.Flatten(),
         )
         # confirm the input dim of fc layer
         with torch.no_grad():
-            in_numbers_of_fc = self.feature_exactor(
+            in_numbers_of_fc = self.features_extractor(
                 torch.zeros(
                     1,
                     in_features[0],
@@ -118,10 +120,8 @@ class CNNDeterministicPolicy(Module):
                 )
             ).shape[1]
 
-        self.action_mlp = MLPDefaultBlock1(
-            in_numbers_of_fc, out_features, **factory_kwargs
-        )
+        self.action_mlp = MlpBlock2(in_numbers_of_fc, out_features, **factory_kwargs)
 
     def forward(self, input: Tensor) -> Tensor:
-        features = self.feature_exactor(input)
+        features = self.features_extractor(input)
         return self.action_mlp(features)

@@ -1,5 +1,3 @@
-import os
-import pickle
 from collections import deque
 from typing import Any, Dict
 
@@ -7,29 +5,29 @@ import numpy as np
 
 from .memory import Memory
 
+# TODO: Optimize the speed.
+# TODO: Add support for multi-agent simulation environment.
+
 
 class RolloutBuffer(Memory):
-    """Reply Buffer."""
+    """Rollout Buffer."""
 
     def __init__(
         self,
-        capacity: int = 10000,
-        # observation_shape: Tuple[int, int, int] = None,
-        # action_shape: Tuple[int, int] = None,
-        save_buffer: bool = False,
-        buffer_file_path: str = None,
+        capacity: int = None,
     ) -> None:
-        if save_buffer and buffer_file_path is None:
-            raise ValueError(
-                "It seems you are like to save buffer file however you don't give a saving path."
-            )
         super(RolloutBuffer, self).__init__()
         self.capacity = capacity
-        # self.observation_shape = observation_shape
-        # self.action_shape = action_shape
-        self.save_buffer = save_buffer
-        self.buffer_file_path = buffer_file_path
-        self.check_buffer_file(buffer_file_path)
+        self.buffer = {
+            "observation": deque(maxlen=self.capacity),
+            "value": deque(maxlen=self.capacity),
+            "action": deque(maxlen=self.capacity),
+            "action_log_prob": deque(maxlen=self.capacity),
+            "reward": deque(maxlen=self.capacity),
+            "next_observation": deque(maxlen=self.capacity),
+            "next_value": deque(maxlen=self.capacity),
+            "done": deque(maxlen=self.capacity),
+        }
 
     def remember(self, experience: Dict[str, Any]) -> None:
         """To remember experiences.
@@ -37,26 +35,25 @@ class RolloutBuffer(Memory):
         And a transition is presented by a dictionary.
 
         Args:
-            experience: transition:['observation', 'action',
-                                    'reward', 'next_observation',
-                                    'done']
-
+            transitions: A dictionary and its keys are
+                        ['observation', 'value'
+                         'action', 'action_log_prob',
+                         'reward', 'next_observation',
+                         'next_value', 'done']
         """
         experience_keys = list(experience.keys())
         assert experience_keys == [
             "observation",
+            "value",
             "action",
+            "action_log_prob",
             "reward",
             "next_observation",
+            "next_value",
             "done",
         ], "The transition dict's format is not right, \
             please check the keys of transitions are   \
             'observation', 'action', 'reward', 'next_observation', 'done'"
-
-        buffer_size = len(self.buffer["done"])
-        if buffer_size >= self.capacity:
-            for key in experience_keys:
-                self.buffer[key].popleft()
         for key in experience_keys:
             self.buffer[key].append(experience[key])
 
@@ -68,21 +65,18 @@ class RolloutBuffer(Memory):
 
         Args:
             transitions: A dictionary and its keys are
-                        ['observation', 'action',
-                        'reward', 'next_observation',
-                        'done']
+                        ['observation', 'value'
+                         'action', 'action_log_prob',
+                         'reward', 'next_observation',
+                         'next_value', 'done']
         """
         self.remember(transitions)
 
-    def save(self) -> None:
-        with open(self.buffer_file_path, "wb") as buffer_file:
-            pickle.dump(self.buffer, buffer_file)
+    def sample(self, batch_size: int) -> Dict[str, np.ndarray]:
+        """Sample transitions in buffer.
 
-    def sample(self, batch_size: int = None) -> None:
-        """Uniform sample transitions from buffer
-
-        Args:
-            batch_size: The sampling size of transitions
+        Returns:
+            sample transitions
 
         """
         buffer_size = len(self.buffer["done"])
@@ -102,37 +96,22 @@ class RolloutBuffer(Memory):
 
         return sampling_transitions
 
-    def check_buffer_file(self, buffer_file_path: str) -> None:
-        """This function is used to check whether the buffer file exists.
-        This function will check if the buffer file exists, and if it is
-        existing, load it. And if not, create a buffer.
+    def clear(self) -> None:
+        """Clear all transitions in transition buffer."""
+        for key in self.buffer.keys():
+            self.buffer[key].clear()
 
-        Args:
-            buffer_file_path: The buffer file path.
-
-        """
-        # If given a buffer file save path,
-        # first check whether the buffer file exists.
-        if buffer_file_path is None:
-            self.buffer = {
-                "observation": deque(maxlen=self.capacity),
-                "action": deque(maxlen=self.capacity),
-                "reward": deque(maxlen=self.capacity),
-                "next_observation": deque(maxlen=self.capacity),
-                "done": deque(maxlen=self.capacity),
-            }
-
-        elif os.path.exists(buffer_file_path):
-            with open(buffer_file_path, "rb") as buffer_file:
-                self.buffer = pickle.load(buffer_file)
-            assert list(self.buffer.keys()) == [
-                "observation",
-                "action",
-                "reward",
-                "next_observation",
-                "done",
-            ], "The format of the existing buffer \
-                    file is wrong, please delete it."
+    def compute_advantage(self, gamma: float, gae_lambda: float) -> None:
+        self.buffer["advantage"] = deque(maxlen=self.capacity)
+        advantage = 0
+        for idx in reversed(range(self.capacity)):
+            mask = 1 - self.buffer["done"][idx]
+            reward = self.buffer["reward"][idx]
+            value = self.buffer["value"][idx]
+            next_value = self.buffer["next_value"][idx]
+            delta = reward + gamma * next_value * mask - value
+            advantage = gamma * gae_lambda * advantage * mask + delta
+            self.buffer["advantage"].appendleft(advantage.astype(np.float32))
 
     @property
     def length(self) -> int:

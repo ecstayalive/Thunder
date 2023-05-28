@@ -1,16 +1,23 @@
-from typing import Tuple
+from typing import Tuple, Union
 
+import torch
+import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import Module
 
 from ...value_functions import QFunction, VFunction
 
 ImageType = Tuple[int, int, int]
+MixType = Tuple[ImageType, int]
 
 
 class CriticQ(Module):
     def __init__(
-        self, obs_features: ImageType, action_dim: int, device=None, dtype=None
+        self,
+        obs_features: Union[int, ImageType, MixType],
+        action_dim: int,
+        device=None,
+        dtype=None,
     ) -> None:
         super(CriticQ, self).__init__()
         factor_kwargs = {"device": device, "dtype": dtype}
@@ -21,7 +28,9 @@ class CriticQ(Module):
 
 
 class CriticV(Module):
-    def __init__(self, obs_features: ImageType, device=None, dtype=None) -> None:
+    def __init__(
+        self, obs_features: Union[int, ImageType, MixType], device=None, dtype=None
+    ) -> None:
         super(CriticV, self).__init__()
         factor_kwargs = {"device": device, "dtype": dtype}
         self.v = VFunction(obs_features, **factor_kwargs)

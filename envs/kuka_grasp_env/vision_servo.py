@@ -1,5 +1,5 @@
 import pybullet as p
-from gym import spaces
+from gymnasium import spaces
 
 from .framework import KukaGraspEnvFramework
 
@@ -35,20 +35,21 @@ class KukaVisionServoGraspEnv(KukaGraspEnvFramework):
             show_image,
             use_depth_image,
         )
+        self.env_name = "KukaVisionServoGrasp"
         # 是否为视觉伺服
         self.vision_servo = False
-
-        self.total_grasp_times = 0
-        self.successful_grasp_times = 0
-
-    def reset(self):
-        """Environment reset called at the beginning of an episode."""
         ########################################################################
         # action spaces
         ########################################################################
         self.action_space = spaces.Box(
             low=-10, high=10, shape=(5,)
         )  # dx, dy, dz, dangle, finger_angle
+
+        self.total_grasp_times = 0
+        self.successful_grasp_times = 0
+
+    def reset(self):
+        """Environment reset called at the beginning of an episode."""
         return self.env_reset()
 
     def step(self, action):
@@ -101,7 +102,7 @@ class KukaVisionServoGraspEnv(KukaGraspEnvFramework):
             pos, _ = p.getBasePositionAndOrientation(uid)
             # If any block is above height, provide reward.
             if pos[2] > 0.15:
-                reward = 1
+                reward = 100
                 break
         return reward
 

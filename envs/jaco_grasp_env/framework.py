@@ -4,17 +4,17 @@ import random
 from abc import ABC, abstractmethod
 
 import cv2
-import gym
+import gymnasium
 import numpy as np
 import pybullet as p
 import pybullet_data as pd
 from agent import Jaco2
-from gym import spaces
-from gym.utils import seeding
+from gymnasium import spaces
+from gymnasium.utils import seeding
 
 
 class JacoGraspEnvFramework(
-    gym.Env,
+    gymnasium.Env,
     ABC,
 ):
     """Jaco robotic arm grasp envs' framework."""
@@ -159,8 +159,7 @@ class JacoGraspEnvFramework(
         ########################################################################
         # Choose the objects in the bin
         ########################################################################
-        # self.num_objects = np.random.randint(1, 6)
-        self.num_objects = 5
+        self.num_objects = np.random.randint(1, 6)
         urdf_list = self.get_random_objects(self.num_objects, self.is_test)
         self.object_uids = self.place_objects_randomly(urdf_list)
         self.observation = self.get_observation()

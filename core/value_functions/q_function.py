@@ -4,7 +4,7 @@ import torch
 from torch import nn, Tensor
 from torch.nn import Module
 
-from ..nn import CNNDefaultBlock1, MLPDefaultBlock1
+from ..nn import MlpBlock2, ReducingCnnBlock
 
 ImageType = Tuple[int, int, int]
 MixType = Tuple[ImageType, int]
@@ -13,7 +13,7 @@ MixType = Tuple[ImageType, int]
 class QFunction(Module):
     def __init__(
         self,
-        observation_features: Union[ImageType, int, MixType],
+        observation_features: Union[int, ImageType, MixType],
         action_features: int,
         device=None,
         dtype=None,
@@ -21,11 +21,13 @@ class QFunction(Module):
         super(QFunction, self).__init__()
         factor_kwargs = {"device": device, "dtype": dtype}
         if isinstance(observation_features, int):
-            self.features_extractor = MLPDefaultBlock1(
-                observation_features, 256, **factor_kwargs
+            self.features_extractor = nn.Sequential(
+                MlpBlock2(observation_features, 256, **factor_kwargs), nn.ReLU6()
             )
-            self.action_mpl = MLPDefaultBlock1(action_features, 256, **factor_kwargs)
-            self.calculate_q_mlp = MLPDefaultBlock1(256, 1, **factor_kwargs)
+            self.action_mlp = nn.Sequential(
+                MlpBlock2(action_features, 256, **factor_kwargs), nn.ReLU6()
+            )
+            in_features_of_q_net = 256
         else:
             # NOTE: there are two different ways to implement the deducing network
             #       One is purely MLP, another is CNN blocks plus MLP.
@@ -38,7 +40,8 @@ class QFunction(Module):
                 observation_tuple = observation_features[0]
                 action_dim = observation_features[1] + action_features
             self.features_extractor = nn.Sequential(
-                CNNDefaultBlock1(observation_tuple[0], **factor_kwargs),
+                ReducingCnnBlock(observation_tuple[0], **factor_kwargs),
+                nn.ReLU6(),
                 nn.Flatten(),
             )
             with torch.no_grad():
@@ -49,17 +52,15 @@ class QFunction(Module):
                     observation_tuple[2],
                     **factor_kwargs
                 )
-                action_mlp_output_features = self.features_extractor(
+                in_features_of_q_net = self.features_extractor(
                     testing_input_data
                 ).shape[1]
-            self.action_mlp = MLPDefaultBlock1(
-                action_dim, action_mlp_output_features, **factor_kwargs
+            self.action_mlp = nn.Sequential(
+                MlpBlock2(action_dim, in_features_of_q_net, **factor_kwargs), nn.ReLU6()
             )
-            self.calculate_q_mlp = MLPDefaultBlock1(
-                action_mlp_output_features, 1, **factor_kwargs
-            )
+        self.calculate_q_mlp = MlpBlock2(in_features_of_q_net, 1, **factor_kwargs)
 
-    def forward(self, observation: Tensor, generalized_action: Tensor) -> Tensor:
+    def forward(self, observation: Tensor, generalized_data: Tensor) -> Tensor:
         """
         Args:
             observation: When it is int type, it has no other meanings. However,
@@ -68,5 +69,5 @@ class QFunction(Module):
                                 some additional observations and actions
         """
         observation_features_vec = self.features_extractor(observation)
-        generalized_action_vec = self.action_mlp(generalized_action)
+        generalized_action_vec = self.action_mlp(generalized_data)
         return self.calculate_q_mlp(observation_features_vec + generalized_action_vec)

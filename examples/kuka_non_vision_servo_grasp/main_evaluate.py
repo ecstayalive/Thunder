@@ -33,7 +33,4 @@ if __name__ == "__main__":
         show_image=False,
     )
     model = SAC(env=env)
-    try:
-        model.evaluate_model()
-    except BaseException as e:
-        traceback.print_exc()
+    model.evaluate_model()

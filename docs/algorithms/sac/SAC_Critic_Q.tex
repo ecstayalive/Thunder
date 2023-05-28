@@ -3,7 +3,7 @@
 \usepackage{ctex}% 中文支持
 \usepackage{tikz}
 
-\subimport{./}{init}
+\subimport{../}{init}
 \usetikzlibrary{positioning}
 \usetikzlibrary{3d} %for including external image
 \usetikzlibrary{quotes,angles}
@@ -39,7 +39,7 @@
         % 变换后形状为:  torch.Size([16, 1296])
         % 变换后形状为:  torch.Size([16, 128])
         % 变换后形状为:  torch.Size([16, 64])
-        
+
         \tikzstyle{connection}=[ultra thick,every node/.style={sloped,allow upside down},draw=\edgecolor,opacity=0.7]
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Data
@@ -65,8 +65,8 @@
         \pic[shift={(10,0,4+2)}] at (action-value-east) {RightBandedBox={name=sfc1-3,
                                 fill=\PcColor,bandfill=\PcSquashColor,%
                                 height=8,width=3,depth=3}};
-        
-        
+
+
         \pic[shift={(10,0,-4)}] at (action-value-east) {RightBandedBox={name=sfc1-4,
                                 fill=\PcColor,bandfill=\PcSquashColor,%
                                 height=8,width=3,depth=3}};
@@ -74,8 +74,8 @@
                                 fill=\PcColor,bandfill=\PcSquashColor,%
                                 height=8,width=3,depth=3}};
         % 省略号
-        \node[shift={(0, 0, 2.7)}, canvas is zy plane at x=0] (temp) at (sfc1-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
-        \node[shift={(0, 0, -1.2)}, canvas is zy plane at x=0] (temp) at (sfc1-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+        \node[shift={(0, 0, 2.7)}, canvas is zy plane at x=0] (temp) at (sfc1-1-east) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
+        \node[shift={(0, 0, -1.2)}, canvas is zy plane at x=0] (temp) at (sfc1-1-east) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Action和Linear Layer1之间的连线
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -95,7 +95,7 @@
         \pic[shift={(10,0,4+2)}] at (sfc1-1-east) {RightBandedBox={name=sfc2-3,
                                 fill=\PcColor,bandfill=\PcSquashColor,%
                                 height=8,width=3,depth=3}};
-        
+
         \pic[shift={(10,0,-4)}] at (sfc1-1-east) {RightBandedBox={name=sfc2-4,
                                 fill=\PcColor,bandfill=\PcSquashColor,%
                                 height=8,width=3,depth=3}};
@@ -103,8 +103,8 @@
                                 fill=\PcColor,bandfill=\PcSquashColor,%
                                 height=8,width=3,depth=3}};
         % 省略号
-        \node[shift={(0, 0, 2.7)}, canvas is zy plane at x=0] (temp) at (sfc2-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
-        \node[shift={(0, 0, -1.2)}, canvas is zy plane at x=0] (temp) at (sfc2-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+        \node[shift={(0, 0, 2.7)}, canvas is zy plane at x=0] (temp) at (sfc2-1-east) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
+        \node[shift={(0, 0, -1.2)}, canvas is zy plane at x=0] (temp) at (sfc2-1-east) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Linear Layer1和Linear Layer2之间的连线
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -119,13 +119,13 @@
         \draw[->]  (\from) -- (\to);
         \foreach \from/\to in {sfc1-5-east/sfc2-1-west, sfc1-5-east/sfc2-2-west, sfc1-5-east/sfc2-3-west, sfc1-5-east/sfc2-4-west, sfc1-5-east/sfc2-5-west}
         \draw[->]  (\from) -- (\to);
-        
+
         % reshape
         \pic[shift={(12, 0, 0)}] at (sfc2-1-east) {Box={name=state-pic,fill=\PcSquashColor,opacity=0.5,height=24,width=2,depth=24}};
         % 循环变量
         \foreach \from/\to in {sfc2-1-east/state-pic-west, sfc2-2-east/state-pic-west, sfc2-3-east/state-pic-west, sfc2-4-east/state-pic-west, sfc2-5-east/state-pic-west}
         \draw[->]  (\from) -- (\to);
-        
+
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% 卷积单元
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -160,9 +160,9 @@
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% 卷积单元需要乘以2
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        \node[shift={(4, 0, 0)}, canvas is xy plane at z=0] (ellipsis1) at (p1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
-        \node[shift={(2, 0, 0)}, canvas is xy plane at z=0] (temp) at (ellipsis1) {\includegraphics[width=2cm,height=2cm]{x2.png}};
-        \node[shift={(2, 0, 0)}, canvas is xy plane at z=0] (ellipsis2) at (temp) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+        \node[shift={(4, 0, 0)}, canvas is xy plane at z=0] (ellipsis1) at (p1-east) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
+        \node[shift={(2, 0, 0)}, canvas is xy plane at z=0] (temp) at (ellipsis1) {\includegraphics[width=2cm,height=2cm]{../x2.png}};
+        \node[shift={(2, 0, 0)}, canvas is xy plane at z=0] (ellipsis2) at (temp) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
         \draw [connection]  (p1-east) -- node {\midarrow} (ellipsis1);
         % 卷积栈
         \coordinate (point3) at ([shift={(0, -10, 0)}] ellipsis2);
@@ -192,7 +192,7 @@
         \pic[shift={(2,0,0)}] at (cr3-east) {RightBandedBox={name=cr4,%
                                 xlabel={{"16", "16"}},ylabel=9,zlabel=9,fill=\ConvColor,bandfill=\ConvReluColor,%
                                 height=15,width=5,depth=15}};
-        
+
         % 注释
         \node[shift={(-1, -3.5, 0)}] at (cr3-east) {卷积层7};
         \node[shift={(-1, -3, 0)}] at (cr4-east) {卷积层8};
@@ -218,7 +218,7 @@
         \pic[shift={(6,0,4+6)}] at (cr4-east) {RightBandedBox={name=fc1-5,
                                 fill=\PcColor,bandfill=\PcSquashColor,%
                                 height=8,width=3,depth=3}};
-        
+
         \pic[shift={(6,0,-4)}] at (cr4-east) {RightBandedBox={name=fc1-6,
                                 fill=\PcColor,bandfill=\PcSquashColor,%
                                 height=8,width=3,depth=3}};
@@ -232,10 +232,10 @@
                                 fill=\PcColor,bandfill=\PcSquashColor,%
                                 height=8,width=3,depth=3}};
         % 省略号
-        \node[shift={(0, 0, 2.7)}, canvas is zy plane at x=0] (temp) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
-        \node[shift={(0, 0, -1.2)}, canvas is zy plane at x=0] (temp) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+        \node[shift={(0, 0, 2.7)}, canvas is zy plane at x=0] (temp) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
+        \node[shift={(0, 0, -1.2)}, canvas is zy plane at x=0] (temp) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %% Draw Dotted Edges 
+        %% Draw Dotted Edges
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         \draw[densely dashed]
         (fc1-5-west)++(3, 3.7, 8) coordinate(a) -- (cr4-nearnortheast)
@@ -259,7 +259,7 @@
         \pic[shift={(8,0,2+6)}] at (fc1-1-east) {RightBandedBox={name=fc2-4,
                                 fill=\PcColor,bandfill=\PcSquashColor,%
                                 height=8,width=3,depth=3}};
-        
+
         \pic[shift={(8,0,-2)}] at (fc1-1-east) {RightBandedBox={name=fc2-5,
                                 fill=\PcColor,bandfill=\PcSquashColor,%
                                 height=8,width=3,depth=3}};
@@ -273,7 +273,7 @@
                                 fill=\PcColor,bandfill=\PcSquashColor,%
                                 height=8,width=3,depth=3}};
         % 省略号
-        \node[shift={(8.3, 0, 0)}, canvas is zy plane at x=0] (ellipsis3) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+        \node[shift={(8.3, 0, 0)}, canvas is zy plane at x=0] (ellipsis3) at (fc1-1-east) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Linear Layer1和Linear Layer2之间的连线
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -319,7 +319,7 @@
                                 fill=\PcColor,bandfill=\PcSquashColor,%
                                 height=8,width=3,depth=3}};
         % 省略号
-        \node[shift={(8.3, 0, 0)}, canvas is zy plane at x=0] (ellipsis4) at (ellipsis3) {\includegraphics[width=2cm,height=2cm]{cellipsis.png}};
+        \node[shift={(8.3, 0, 0)}, canvas is zy plane at x=0] (ellipsis4) at (ellipsis3) {\includegraphics[width=2cm,height=2cm]{../cellipsis.png}};
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Linear Layer2和Linear Layer3之间的连线
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
