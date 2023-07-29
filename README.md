@@ -1,5 +1,7 @@
 # Thunder
 
+<font color="#dd0000">This codebase is currently undergoing refactoring and it is not possible to run the examples. For this reason, I am deeply sorry. I am now trying to construct a better codebase.</font><br />
+
 [中文](./README-ZH.md)
 
 **Thunder** is a deep reinforcement learning package (platform), which still has a lot of shortcomings. The project will gradually improve with my learning.

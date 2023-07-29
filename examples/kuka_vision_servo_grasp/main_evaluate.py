@@ -16,7 +16,7 @@ sys.path.append(package_path)
 os.chdir(package_path)
 import traceback
 
-from core.algorithms import SAC
+from thunder.algorithms import SAC
 
 ########################################################################
 # Train a model

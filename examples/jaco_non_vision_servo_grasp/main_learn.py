@@ -17,7 +17,7 @@ os.chdir(package_path)
 import traceback
 
 # from core.model import GPModel
-from core.algorithms import SAC
+from thunder.algorithms import SAC
 
 ########################################################################
 # Train a model

@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: GP
+title: Thunder
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
@@ -8,9 +8,10 @@ authors:
   - given-names: Dianyong
     family-names: Hou
     email: ecstayalive@163.com
-repository-code: 'https://github.com/ecstayalive/GP'
+repository-code: 'https://github.com/ecstayalive/Thunder'
 abstract: >-
-  Robotic manipulation using Deep Reinforcement Learning
+  Thunder is a library that can be used to build and
+  learning Deep Reinforcement Learning algorithms.
 keywords:
   - Deep Reinforcement Learning
   - Deep Neural Network

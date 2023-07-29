@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from core.nn import MlpBlock2
+from thunder.nn import MlpBlock2
 
 
 class Actor:
