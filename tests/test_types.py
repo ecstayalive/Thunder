@@ -1,13 +1,3 @@
-########################################################################
-# Get the package path
-########################################################################
-import os
-import sys
-
-package_path = os.path.abspath(os.getcwd())
-sys.path.append(package_path)
-os.chdir(package_path)
-
 import torch
 from thunder import BaseTransition, ImageType, MixType, obs_type_checking
 from thunder.memory import ReplayBuffer

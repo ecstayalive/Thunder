@@ -8,9 +8,6 @@ from thunder.nn.modules.mlp_blocks import MlpBlock
 from thunder.types import ImageType, MixType, obs_type_checking
 
 
-
-
-
 class GeneralQ(nn.Module):
     def __init__(
         self,
